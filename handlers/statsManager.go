@@ -48,11 +48,11 @@ func NewStatsManager(URL string) *memdb.MemDB {
 	}
 	schema := sm.createDatabaseSchema()
 
-	// err := sm.fetchStats()
+	err := sm.fetchStats()
 
-	// if err != nil {
-	// 	glog.Fatalf("Fatal could not fetch stats.json: %s", err)
-	// }
+	if err != nil {
+		glog.Fatalf("Fatal could not fetch stats.json: %s", err)
+	}
 
 	data, err := sm.unmarshallData()
 
