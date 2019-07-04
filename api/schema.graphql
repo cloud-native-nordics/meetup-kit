@@ -1,0 +1,118 @@
+schema {
+    query: Query
+}
+
+type MeetupGroup {
+    meetupID: String!
+    name: String
+    city: String
+    country: String
+    organizers: [Organizer!]!
+    meetups: [Meetup!]!
+}
+
+type Organizer {
+    id: String!
+    name: String
+    title: String
+    email: String
+    company: Company
+    countries: [Country]
+    github: String
+    twitter: String
+    speakersBureau: String
+    # meetupGroups: [MeetupGroup]
+}
+
+type Company {
+    id: String!
+    name: String
+    websiteURL: String
+    logoURL: String
+    countries: [Country]
+    # organizers: [Organizer]
+    # speakers: [Speaker]
+}
+
+type Meetup {
+    id: Int!
+    name: String
+    date: String
+    duration: String
+    attendees: Int
+    address: String
+    sponsors: [Sponsor]
+    presentations: [Presentation]
+    # meetupGroup: MeetupGroup
+
+}
+
+type Sponsor {
+    id: String!
+    venue: Venue
+    other: Other
+}
+
+type Venue {
+    id: String!
+    name: String
+    websiteURL: String
+    logoURL: String
+    countries: [Country]
+}
+
+type Other {
+    id: String!
+    name: String
+    websiteURL: String
+    logoURL: String
+    countries: [Country]
+}
+
+type Presentation {
+    id: String!
+    duration: String
+    title: String
+    slides: String
+    speakers: [Speaker]
+}
+
+type Speaker {
+    id: String!
+    name: String
+    title: String
+    email: String
+    company: Company
+    countries: [Country]
+    github: String
+    speakersBureau: String
+}
+
+type Country {
+    id: String
+    name: String
+}
+
+
+type Query {
+    meetupGroups: [MeetupGroup!]!
+    meetupGroup(meetupID: String!): MeetupGroup!
+    
+    organizers: [Organizer!]!
+    Organizer(id: String!): Organizer!
+        
+    companies: [Company!]!
+    company(id: String!): Company!
+        
+    meetups: [Meetup!]!
+    meetup(id: Int!): Meetup!
+            
+    sponsors: [Sponsor!]!
+    sponsor(id: String!): Sponsor!
+
+    presentations: [Presentation!]!
+    presentation(title: String!): Presentation!
+
+    speakers: [Speaker!]!
+    speaker(title: String!): Speaker!
+}
