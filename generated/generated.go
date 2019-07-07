@@ -36,12 +36,10 @@ type Config struct {
 
 type ResolverRoot interface {
 	Company() CompanyResolver
-	Meetup() MeetupResolver
 	Organizer() OrganizerResolver
 	Other() OtherResolver
 	Query() QueryResolver
 	Speaker() SpeakerResolver
-	Sponsor() SponsorResolver
 	Venue() VenueResolver
 }
 
@@ -119,9 +117,9 @@ type ComplexityRoot struct {
 		Meetups       func(childComplexity int) int
 		Organizer     func(childComplexity int, id string) int
 		Organizers    func(childComplexity int) int
-		Presentation  func(childComplexity int, title string) int
+		Presentation  func(childComplexity int, id string) int
 		Presentations func(childComplexity int) int
-		Speaker       func(childComplexity int, title string) int
+		Speaker       func(childComplexity int, id string) int
 		Speakers      func(childComplexity int) int
 		Sponsor       func(childComplexity int, id string) int
 		Sponsors      func(childComplexity int) int
@@ -156,9 +154,6 @@ type ComplexityRoot struct {
 type CompanyResolver interface {
 	Countries(ctx context.Context, obj *models.Company) ([]*models.Country, error)
 }
-type MeetupResolver interface {
-	Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error)
-}
 type OrganizerResolver interface {
 	Countries(ctx context.Context, obj *models.Organizer) ([]*models.Country, error)
 }
@@ -177,15 +172,12 @@ type QueryResolver interface {
 	Sponsors(ctx context.Context) ([]*models.Sponsor, error)
 	Sponsor(ctx context.Context, id string) (*models.Sponsor, error)
 	Presentations(ctx context.Context) ([]*models.Presentation, error)
-	Presentation(ctx context.Context, title string) (*models.Presentation, error)
+	Presentation(ctx context.Context, id string) (*models.Presentation, error)
 	Speakers(ctx context.Context) ([]*models.Speaker, error)
-	Speaker(ctx context.Context, title string) (*models.Speaker, error)
+	Speaker(ctx context.Context, id string) (*models.Speaker, error)
 }
 type SpeakerResolver interface {
 	Countries(ctx context.Context, obj *models.Speaker) ([]*models.Country, error)
-}
-type SponsorResolver interface {
-	Other(ctx context.Context, obj *models.Sponsor) (*models.Other, error)
 }
 type VenueResolver interface {
 	Countries(ctx context.Context, obj *models.Venue) ([]*models.Country, error)
@@ -543,12 +535,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Meetups(childComplexity), true
 
-	case "Query.Organizer":
+	case "Query.organizer":
 		if e.complexity.Query.Organizer == nil {
 			break
 		}
 
-		args, err := ec.field_Query_Organizer_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_organizer_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -572,7 +564,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Presentation(childComplexity, args["title"].(string)), true
+		return e.complexity.Query.Presentation(childComplexity, args["id"].(string)), true
 
 	case "Query.presentations":
 		if e.complexity.Query.Presentations == nil {
@@ -591,7 +583,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Speaker(childComplexity, args["title"].(string)), true
+		return e.complexity.Query.Speaker(childComplexity, args["id"].(string)), true
 
 	case "Query.speakers":
 		if e.complexity.Query.Speakers == nil {
@@ -823,7 +815,7 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
-    sponsors: [Sponsor]
+    sponsors: Sponsor
     presentations: [Presentation]
     # meetupGroup: MeetupGroup
 
@@ -832,7 +824,7 @@ type Meetup {
 type Sponsor {
     id: String!
     venue: Venue
-    other: Other
+    other: [Other]
 }
 
 type Venue {
@@ -881,7 +873,7 @@ type Query {
     meetupGroup(meetupID: String!): MeetupGroup!
     
     organizers: [Organizer!]!
-    Organizer(id: String!): Organizer!
+    organizer(id: String!): Organizer!
         
     companies: [Company!]!
     company(id: String!): Company!
@@ -893,30 +885,16 @@ type Query {
     sponsor(id: String!): Sponsor!
 
     presentations: [Presentation!]!
-    presentation(title: String!): Presentation!
+    presentation(id: String!): Presentation!
 
     speakers: [Speaker!]!
-    speaker(title: String!): Speaker!
+    speaker(id: String!): Speaker!
 }`},
 )
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) field_Query_Organizer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -974,17 +952,31 @@ func (ec *executionContext) field_Query_meetup_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_presentation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_organizer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["title"]; ok {
+	if tmp, ok := rawArgs["id"]; ok {
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["title"] = arg0
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_presentation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -992,13 +984,13 @@ func (ec *executionContext) field_Query_speaker_args(ctx context.Context, rawArg
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["title"]; ok {
+	if tmp, ok := rawArgs["id"]; ok {
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["title"] = arg0
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1513,13 +1505,13 @@ func (ec *executionContext) _Meetup_sponsors(ctx context.Context, field graphql.
 		Object:   "Meetup",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Meetup().Sponsors(rctx, obj)
+		return obj.Sponsors, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1528,10 +1520,10 @@ func (ec *executionContext) _Meetup_sponsors(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Sponsor)
+	res := resTmp.(*models.Sponsor)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
+	return ec.marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_presentations(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -2554,7 +2546,7 @@ func (ec *executionContext) _Query_organizers(ctx context.Context, field graphql
 	return ec.marshalNOrganizer2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_Organizer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_organizer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2571,7 +2563,7 @@ func (ec *executionContext) _Query_Organizer(ctx context.Context, field graphql.
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_Organizer_args(ctx, rawArgs)
+	args, err := ec.field_Query_organizer_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2904,7 +2896,7 @@ func (ec *executionContext) _Query_presentation(ctx context.Context, field graph
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Presentation(rctx, args["title"].(string))
+		return ec.resolvers.Query().Presentation(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2985,7 +2977,7 @@ func (ec *executionContext) _Query_speaker(ctx context.Context, field graphql.Co
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Speaker(rctx, args["title"].(string))
+		return ec.resolvers.Query().Speaker(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3437,13 +3429,13 @@ func (ec *executionContext) _Sponsor_other(ctx context.Context, field graphql.Co
 		Object:   "Sponsor",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Sponsor().Other(rctx, obj)
+		return obj.Other, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3452,10 +3444,10 @@ func (ec *executionContext) _Sponsor_other(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*models.Other)
+	res := resTmp.([]*models.Other)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOOther2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOther(ctx, field.Selections, res)
+	return ec.marshalOOther2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOther(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Venue_id(ctx context.Context, field graphql.CollectedField, obj *models.Venue) (ret graphql.Marshaler) {
@@ -4874,7 +4866,7 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 		case "id":
 			out.Values[i] = ec._Meetup_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "name":
 			out.Values[i] = ec._Meetup_name(ctx, field, obj)
@@ -4887,16 +4879,7 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 		case "address":
 			out.Values[i] = ec._Meetup_address(ctx, field, obj)
 		case "sponsors":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Meetup_sponsors(ctx, field, obj)
-				return res
-			})
+			out.Values[i] = ec._Meetup_sponsors(ctx, field, obj)
 		case "presentations":
 			out.Values[i] = ec._Meetup_presentations(ctx, field, obj)
 		default:
@@ -5141,7 +5124,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "Organizer":
+		case "organizer":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -5149,7 +5132,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_Organizer(ctx, field)
+				res = ec._Query_organizer(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5374,21 +5357,12 @@ func (ec *executionContext) _Sponsor(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Sponsor_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "venue":
 			out.Values[i] = ec._Sponsor_venue(ctx, field, obj)
 		case "other":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Sponsor_other(ctx, field, obj)
-				return res
-			})
+			out.Values[i] = ec._Sponsor_other(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6411,6 +6385,46 @@ func (ec *executionContext) marshalOOther2githubᚗcomᚋcloudᚑnativeᚑnordic
 	return ec._Other(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalOOther2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOther(ctx context.Context, sel ast.SelectionSet, v []*models.Other) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOOther2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOther(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalOOther2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOther(ctx context.Context, sel ast.SelectionSet, v *models.Other) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -6522,46 +6536,6 @@ func (ec *executionContext) marshalOSpeaker2ᚖgithubᚗcomᚋcloudᚑnativeᚑn
 
 func (ec *executionContext) marshalOSponsor2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v models.Sponsor) graphql.Marshaler {
 	return ec._Sponsor(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v []*models.Sponsor) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v *models.Sponsor) graphql.Marshaler {

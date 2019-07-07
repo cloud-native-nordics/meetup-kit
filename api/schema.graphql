@@ -41,7 +41,7 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
-    sponsors: [Sponsor]
+    sponsors: Sponsor
     presentations: [Presentation]
     # meetupGroup: MeetupGroup
 
@@ -50,7 +50,7 @@ type Meetup {
 type Sponsor {
     id: String!
     venue: Venue
-    other: Other
+    other: [Other]
 }
 
 type Venue {
@@ -99,7 +99,7 @@ type Query {
     meetupGroup(meetupID: String!): MeetupGroup!
     
     organizers: [Organizer!]!
-    Organizer(id: String!): Organizer!
+    organizer(id: String!): Organizer!
         
     companies: [Company!]!
     company(id: String!): Company!
@@ -111,8 +111,8 @@ type Query {
     sponsor(id: String!): Sponsor!
 
     presentations: [Presentation!]!
-    presentation(title: String!): Presentation!
+    presentation(id: String!): Presentation!
 
     speakers: [Speaker!]!
-    speaker(title: String!): Speaker!
+    speaker(id: String!): Speaker!
 }

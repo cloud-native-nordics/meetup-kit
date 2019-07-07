@@ -20,9 +20,7 @@ func NewResolver(statsRepository *repositories.StatsRepository) *Resolver {
 func (r *Resolver) Company() generated.CompanyResolver {
 	return &companyResolver{r}
 }
-func (r *Resolver) Meetup() generated.MeetupResolver {
-	return &meetupResolver{r}
-}
+
 func (r *Resolver) Organizer() generated.OrganizerResolver {
 	return &organizerResolver{r}
 }
@@ -35,9 +33,7 @@ func (r *Resolver) Query() generated.QueryResolver {
 func (r *Resolver) Speaker() generated.SpeakerResolver {
 	return &speakerResolver{r}
 }
-func (r *Resolver) Sponsor() generated.SponsorResolver {
-	return &sponsorResolver{r}
-}
+
 func (r *Resolver) Venue() generated.VenueResolver {
 	return &venueResolver{r}
 }
@@ -68,16 +64,17 @@ func (r *organizerResolver) Countries(ctx context.Context, obj *models.Organizer
 	return countries, nil
 }
 
-type meetupResolver struct{ *Resolver }
-
-func (r *meetupResolver) Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error) {
-	panic("not implemented")
-}
-
 type otherResolver struct{ *Resolver }
 
 func (r *otherResolver) Countries(ctx context.Context, obj *models.Other) ([]*models.Country, error) {
-	panic("not implemented")
+	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "other")
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return countries, nil
 }
 
 type queryResolver struct{ *Resolver }
@@ -94,43 +91,134 @@ func (r *queryResolver) MeetupGroups(ctx context.Context) ([]*models.MeetupGroup
 }
 
 func (r *queryResolver) MeetupGroup(ctx context.Context, meetupID string) (*models.MeetupGroup, error) {
-	panic("not implemented")
+	meetupGroups, err := r.statsRepository.GetMeetupGroup(meetupID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetupGroups, nil
 }
 func (r *queryResolver) Organizers(ctx context.Context) ([]*models.Organizer, error) {
-	panic("not implemented")
+	organizers, err := r.statsRepository.GetAllOrganizers()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return organizers, nil
 }
 func (r *queryResolver) Organizer(ctx context.Context, id string) (*models.Organizer, error) {
-	panic("not implemented")
+	organizer, err := r.statsRepository.GetOrganizer(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return organizer, nil
 }
 func (r *queryResolver) Companies(ctx context.Context) ([]*models.Company, error) {
-	panic("not implemented")
+	companies, err := r.statsRepository.GetAllCompanies()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return companies, nil
 }
 func (r *queryResolver) Company(ctx context.Context, id string) (*models.Company, error) {
-	panic("not implemented")
+	company, err := r.statsRepository.GetCompany(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return company, nil
 }
 func (r *queryResolver) Meetups(ctx context.Context) ([]*models.Meetup, error) {
-	panic("not implemented")
+	meetups, err := r.statsRepository.GetAllMeetups()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetups, nil
 }
 func (r *queryResolver) Meetup(ctx context.Context, id int) (*models.Meetup, error) {
-	panic("not implemented")
+	meetup, err := r.statsRepository.GetMeetup(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetup, nil
 }
 func (r *queryResolver) Sponsors(ctx context.Context) ([]*models.Sponsor, error) {
-	panic("not implemented")
+	sponsors, err := r.statsRepository.GetAllSponsors()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsors, nil
 }
 func (r *queryResolver) Sponsor(ctx context.Context, id string) (*models.Sponsor, error) {
-	panic("not implemented")
+	sponsor, err := r.statsRepository.GetSponsor(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsor, nil
 }
 func (r *queryResolver) Presentations(ctx context.Context) ([]*models.Presentation, error) {
-	panic("not implemented")
+	presentations, err := r.statsRepository.GetAllPresentations()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return presentations, nil
 }
-func (r *queryResolver) Presentation(ctx context.Context, title string) (*models.Presentation, error) {
-	panic("not implemented")
+func (r *queryResolver) Presentation(ctx context.Context, id string) (*models.Presentation, error) {
+	presentation, err := r.statsRepository.GetPresentation(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return presentation, nil
 }
 func (r *queryResolver) Speakers(ctx context.Context) ([]*models.Speaker, error) {
-	panic("not implemented")
+	speakers, err := r.statsRepository.GetAllSpeakers()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return speakers, nil
 }
-func (r *queryResolver) Speaker(ctx context.Context, title string) (*models.Speaker, error) {
-	panic("not implemented")
+func (r *queryResolver) Speaker(ctx context.Context, id string) (*models.Speaker, error) {
+	speaker, err := r.statsRepository.GetSpeaker(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return speaker, nil
 }
 
 type speakerResolver struct{ *Resolver }
@@ -146,14 +234,10 @@ func (r *speakerResolver) Countries(ctx context.Context, obj *models.Speaker) ([
 	return countries, nil
 }
 
-type sponsorResolver struct{ *Resolver }
+type venueResolver struct{ *Resolver }
 
-func (r *sponsorResolver) Other(ctx context.Context, obj *models.Sponsor) (*models.Other, error) {
-	panic("not implemented")
-}
-
-func (r *sponsorResolver) Countries(ctx context.Context, obj *models.Sponsor) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "sponsor")
+func (r *venueResolver) Countries(ctx context.Context, obj *models.Venue) ([]*models.Country, error) {
+	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "venue")
 
 	if err != nil {
 		glog.V(1).Info(err)
@@ -161,10 +245,4 @@ func (r *sponsorResolver) Countries(ctx context.Context, obj *models.Sponsor) ([
 	}
 
 	return countries, nil
-}
-
-type venueResolver struct{ *Resolver }
-
-func (r *venueResolver) Countries(ctx context.Context, obj *models.Venue) ([]*models.Country, error) {
-	panic("not implemented")
 }

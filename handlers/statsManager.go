@@ -29,6 +29,8 @@ type unmarshalledData struct {
 	companies       []models.Company
 	meetups         []models.Meetup
 	sponsors        []models.Sponsor
+	others          []models.Other
+	venues          []models.Venue
 	speakers        []models.Speaker
 	presentations   []models.Presentation
 	countries       []models.Country
@@ -46,7 +48,7 @@ func NewStatsManager(URL string) *memdb.MemDB {
 		URL:      URL,
 		filepath: "./data/stats.json",
 	}
-	schema := sm.createDatabaseSchema()
+	schema := createDatabaseSchema()
 
 	err := sm.fetchStats()
 
@@ -115,6 +117,14 @@ func (sm *StatsManager) unmarshallData() (*unmarshalledData, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sm.generateCountries(output)
+	sm.generateMeetupGroups(output, meetupGroups.MeetupGroups)
+
+	return output, nil
+}
+
+func (sm *StatsManager) generateCountries(output *unmarshalledData) {
 	var denmark = "denmark"
 	var finland = "finland"
 	var sweden = "sweden"
@@ -126,111 +136,115 @@ func (sm *StatsManager) unmarshallData() (*unmarshalledData, error) {
 	}
 
 	output.countries = countries
-	output.meetupGroups = meetupGroups.MeetupGroups
+}
 
-	for _, meetupGroup := range meetupGroups.MeetupGroups {
-		//Add organizers
-		for _, organizer := range meetupGroup.Organizers {
-			organizerToBe := organizer
-			organizerToBe.MeetupGroupID = &meetupGroup.MeetupID
-			output.organizers = append(output.organizers, *organizerToBe)
+func (sm *StatsManager) generateCountryRelation(output *unmarshalledData, countries []*string, id string, entityType string) {
+	for _, country := range countries {
+		output.entityToCountry = append(output.entityToCountry,
+			models.EntityToCountry{
+				ID:         &id,
+				CountryID:  country,
+				EntityType: entityType,
+			})
+	}
 
-			for _, country := range organizer.Countries {
-				output.entityToCountry = append(output.entityToCountry,
-					models.EntityToCountry{
-						ID:         &organizer.ID,
-						CountryID:  country,
-						EntityType: "organizer",
-					})
-			}
+}
 
-			if organizer.Company != nil {
-				output.companies = append(output.companies, *organizer.Company)
+func (sm *StatsManager) generateCompany(output *unmarshalledData, company *models.Company) {
+	if company != nil {
+		output.companies = append(output.companies, *company)
+		sm.generateCountryRelation(output, company.Countries, company.ID, "company")
+	}
+}
 
-				for _, country := range organizer.Company.Countries {
-					output.entityToCountry = append(output.entityToCountry,
-						models.EntityToCountry{
-							ID:         &organizer.Company.ID,
-							CountryID:  country,
-							EntityType: "company",
-						})
-				}
-			}
+func (sm *StatsManager) generateOrganizers(output *unmarshalledData, organizers []*models.Organizer, meetupID string) {
+	for _, organizer := range organizers {
+		organizerToBe := organizer
+		organizerToBe.MeetupGroupID = &meetupID
+		output.organizers = append(output.organizers, *organizerToBe)
+
+		sm.generateCountryRelation(output, organizer.Countries, organizer.ID, "organizer")
+		sm.generateCompany(output, organizer.Company)
+	}
+}
+
+func (sm *StatsManager) generateSponsors(output *unmarshalledData, sponsors *models.Sponsor, meetupID int) {
+	if sponsors != nil {
+		sponsorsToBe := sponsors
+		sponsorsToBe.ID = strconv.Itoa(rand.Int())
+		sponsorsToBe.MeetupID = meetupID
+
+		//Add venue sponsor
+		if sponsorsToBe.Venue != nil {
+			sponsorsToBe.Venue.SponsorID = sponsorsToBe.ID
+			output.venues = append(output.venues, *sponsorsToBe.Venue)
+
+			sm.generateCountryRelation(output, sponsorsToBe.Venue.Countries, sponsorsToBe.Venue.ID, "venue")
+
 		}
 
-		//Add meetups
-		for _, meetup := range meetupGroup.Meetups {
-			meetupToBe := meetup
-			meetupToBe.MeetupGroupID = &meetupGroup.MeetupID
-			output.meetups = append(output.meetups, *meetupToBe)
+		//Add other sponsors
+		for _, other := range sponsorsToBe.Other {
+			other.SponsorID = other.ID
+			output.others = append(output.others, *other)
 
-			//Add sponsors
-			if meetup.Sponsors != nil {
-				sponsorsToBe := meetup.Sponsors
-				sponsorsToBe.ID = strconv.Itoa(rand.Intn(100000000000))
-				sponsorsToBe.MeetupID = meetup.ID
+			sm.generateCountryRelation(output, other.Countries, other.ID, "other")
 
-				if sponsorsToBe.Venue != nil {
-					sponsorsToBe.Venue.SponsorID = sponsorsToBe.ID
+		}
 
-					for _, country := range sponsorsToBe.Venue.Countries {
-						output.entityToCountry = append(output.entityToCountry,
-							models.EntityToCountry{
-								ID:         &sponsorsToBe.Venue.ID,
-								CountryID:  country,
-								EntityType: "sponsor",
-							})
-					}
-				}
+		output.sponsors = append(output.sponsors, *sponsorsToBe)
+	}
+}
 
-				//Add other sponsor
-				for _, other := range sponsorsToBe.Other {
-					other.SponsorID = other.ID
-					for _, country := range other.Countries {
-						output.entityToCountry = append(output.entityToCountry,
-							models.EntityToCountry{
-								ID:         &other.ID,
-								CountryID:  country,
-								EntityType: "sponsor",
-							})
-					}
-				}
+func (sm *StatsManager) generatePresentations(output *unmarshalledData, presentations []*models.Presentation, meetupID int) {
+	for _, presentation := range presentations {
+		presentationToBe := presentation
+		presentationToBe.MeetupID = meetupID
+		presentationToBe.ID = strconv.Itoa(rand.Int())
 
-				output.sponsors = append(output.sponsors, *sponsorsToBe)
-			}
+		output.presentations = append(output.presentations, *presentationToBe)
 
-			//Add presentations
-			for _, presentation := range meetup.Presentations {
-				presentationToBe := presentation
-				presentationToBe.MeetupID = meetup.ID
-				presentationToBe.ID = strconv.Itoa(rand.Intn(100000000000))
+		for _, speaker := range presentation.Speakers {
+			speakerToBe := speaker
+			speakerToBe.PresentationID = &presentation.ID
 
-				output.presentations = append(output.presentations, *presentationToBe)
+			output.speakers = append(output.speakers, *speakerToBe)
 
-				for _, speaker := range presentation.Speakers {
-					speakerToBe := speaker
-					speakerToBe.PresentationID = &presentation.ID
+			sm.generateCountryRelation(output, speaker.Countries, speaker.ID, "speaker")
 
-					output.speakers = append(output.speakers, *speakerToBe)
+			if speaker.Company != nil {
+				output.companies = append(output.companies, *speaker.Company)
 
-					if speaker.Company != nil {
-						output.companies = append(output.companies, *speaker.Company)
+				sm.generateCountryRelation(output, speaker.Company.Countries, speaker.Company.ID, "company")
 
-						for _, country := range speaker.Company.Countries {
-							output.entityToCountry = append(output.entityToCountry,
-								models.EntityToCountry{
-									ID:         &speaker.Company.ID,
-									CountryID:  country,
-									EntityType: "company",
-								})
-						}
-					}
-				}
 			}
 		}
 	}
+}
 
-	return output, nil
+func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups []*models.Meetup, meetupGroupID string) {
+	for _, meetup := range meetups {
+		meetupToBe := meetup
+		meetupToBe.MeetupGroupID = &meetupGroupID
+		output.meetups = append(output.meetups, *meetupToBe)
+
+		//Add sponsors
+		sm.generateSponsors(output, meetup.Sponsors, meetupToBe.ID)
+
+		//Add presentations
+		sm.generatePresentations(output, meetup.Presentations, meetup.ID)
+	}
+}
+
+func (sm *StatsManager) generateMeetupGroups(output *unmarshalledData, meetupGroups []models.MeetupGroup) {
+	output.meetupGroups = meetupGroups
+	for _, meetupGroup := range meetupGroups {
+		//Add organizers
+		sm.generateOrganizers(output, meetupGroup.Organizers, meetupGroup.MeetupID)
+
+		//Add meetups
+		sm.generateMeetups(output, meetupGroup.Meetups, meetupGroup.MeetupID)
+	}
 }
 
 //Create and populate database
@@ -293,6 +307,22 @@ func (sm *StatsManager) populateDatabase(schema *memdb.DBSchema, data *unmarshal
 		}
 	}
 
+	// Insert Venues
+	glog.V(5).Infof("Inserting %d Venues", len(data.venues))
+	for _, venue := range data.venues {
+		if err := txn.Insert("venue", venue); err != nil {
+			return nil, err
+		}
+	}
+
+	// Insert Others
+	glog.V(5).Infof("Inserting %d Others", len(data.others))
+	for _, other := range data.others {
+		if err := txn.Insert("other", other); err != nil {
+			return nil, err
+		}
+	}
+
 	// Insert Presentations
 	glog.V(5).Infof("Inserting %d Presentations", len(data.presentations))
 	for _, presentation := range data.presentations {
@@ -321,322 +351,4 @@ func (sm *StatsManager) populateDatabase(schema *memdb.DBSchema, data *unmarshal
 	txn.Commit()
 
 	return db, nil
-}
-
-//Create database schema
-func (sm *StatsManager) createDatabaseSchema() *memdb.DBSchema {
-	glog.V(5).Info("Creating database schema")
-	schema := &memdb.DBSchema{
-		Tables: map[string]*memdb.TableSchema{
-			//MeetupGroup Schema
-			"meetupGroup": &memdb.TableSchema{
-				Name: "meetupGroup",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "MeetupID"},
-					},
-					"name": &memdb.IndexSchema{
-						Name:         "name",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
-					},
-					"city": &memdb.IndexSchema{
-						Name:         "city",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "City"},
-					},
-					"country": &memdb.IndexSchema{
-						Name:         "country",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Country"},
-					},
-				},
-			},
-			//Organizer Schema
-			"organizer": &memdb.TableSchema{
-				Name: "organizer",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"name": &memdb.IndexSchema{
-						Name:         "name",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
-					},
-					"title": &memdb.IndexSchema{
-						Name:         "title",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Title"},
-					},
-					"email": &memdb.IndexSchema{
-						Name:         "email",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Email"},
-					},
-					"github": &memdb.IndexSchema{
-						Name:         "github",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Github"},
-					},
-					"twitter": &memdb.IndexSchema{
-						Name:         "twitter",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Twitter"},
-					},
-					"speakersBureau": &memdb.IndexSchema{
-						Name:         "speakersBureau",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "SpeakersBureau"},
-					},
-					"meetupGroupId": &memdb.IndexSchema{
-						Name:         "meetupGroupId",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "MeetupGroupID"},
-					},
-				},
-			},
-			//Company Schema
-			"company": &memdb.TableSchema{
-				Name: "company",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"name": &memdb.IndexSchema{
-						Name:         "name",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
-					},
-					"websiteURL": &memdb.IndexSchema{
-						Name:         "websiteURL",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "WebsiteURL"},
-					},
-					"logoURL": &memdb.IndexSchema{
-						Name:         "logoURL",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "LogoURL"},
-					},
-					"organizerID": &memdb.IndexSchema{
-						Name:         "organizerID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "OrganizerID"},
-					},
-					"speakerID": &memdb.IndexSchema{
-						Name:         "speakerID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "SpeakerID"},
-					},
-				},
-			},
-			//Meetup Schema
-			"meetup": &memdb.TableSchema{
-				Name: "meetup",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"name": &memdb.IndexSchema{
-						Name:         "name",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
-					},
-					"date": &memdb.IndexSchema{
-						Name:         "date",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Date"},
-					},
-					"duration": &memdb.IndexSchema{
-						Name:         "duration",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Duration"},
-					},
-					"attendees": &memdb.IndexSchema{
-						Name:         "attendees",
-						Unique:       false,
-						AllowMissing: false,
-						Indexer:      &memdb.IntFieldIndex{Field: "Attendees"},
-					},
-					"address": &memdb.IndexSchema{
-						Name:         "address",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Address"},
-					},
-					"meetupGroupID": &memdb.IndexSchema{
-						Name:         "meetupGroupID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "MeetupGroupID"},
-					},
-				},
-			},
-			//Sponsor Schema
-			"sponsor": &memdb.TableSchema{
-				Name: "sponsor",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"meetupID": &memdb.IndexSchema{
-						Name:         "meetupID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "MeetupID"},
-					},
-				},
-			},
-			//Presentation Schema
-			"presentation": &memdb.TableSchema{
-				Name: "presentation",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"duration": &memdb.IndexSchema{
-						Name:         "duration",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Duration"},
-					},
-					"title": &memdb.IndexSchema{
-						Name:         "title",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Title"},
-					},
-					"slides": &memdb.IndexSchema{
-						Name:         "slides",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Slides"},
-					},
-					"meetupID": &memdb.IndexSchema{
-						Name:         "meetupID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "MeetupID"},
-					},
-				},
-			},
-			//Speaker Schema
-			"speaker": &memdb.TableSchema{
-				Name: "speaker",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"name": &memdb.IndexSchema{
-						Name:         "name",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
-					},
-					"title": &memdb.IndexSchema{
-						Name:         "title",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Title"},
-					},
-					"email": &memdb.IndexSchema{
-						Name:         "email",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Email"},
-					},
-					"github": &memdb.IndexSchema{
-						Name:         "github",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Github"},
-					},
-					"speakersBureau": &memdb.IndexSchema{
-						Name:         "speakersBureau",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "SpeakersBureau"},
-					},
-					"presentationID": &memdb.IndexSchema{
-						Name:         "presentationID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "PresentationID"},
-					},
-				},
-			},
-			//Country Schema
-			"country": &memdb.TableSchema{
-				Name: "country",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"name": &memdb.IndexSchema{
-						Name:         "name",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
-					},
-				},
-			},
-			//CountryToEntity Schema
-			"entityToCountry": &memdb.TableSchema{
-				Name: "entityToCountry",
-				Indexes: map[string]*memdb.IndexSchema{
-					"countryId": &memdb.IndexSchema{
-						Name:    "countryId",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "CountryID"},
-					},
-					"id": &memdb.IndexSchema{
-						Name:   "id",
-						Unique: true,
-
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"entityType": &memdb.IndexSchema{
-						Name:    "entityType",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "EntityType"},
-					},
-				},
-			},
-		},
-	}
-	return schema
 }
