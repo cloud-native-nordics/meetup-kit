@@ -41,32 +41,31 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
-    sponsors: Sponsor
+    sponsors: MeetupSponsor
     presentations: [Presentation]
     # meetupGroup: MeetupGroup
 
 }
 
+type Member {
+    id: String!
+    name: String
+    websiteURL: String
+    logoURL: String
+    countries: [Country]
+}
+
 type Sponsor {
     id: String!
-    venue: Venue
-    other: [Other]
-}
-
-type Venue {
-    id: String!
     name: String
     websiteURL: String
     logoURL: String
     countries: [Country]
 }
-
-type Other {
+type MeetupSponsor {
     id: String!
-    name: String
-    websiteURL: String
-    logoURL: String
-    countries: [Country]
+    venue: Sponsor
+    other: [Sponsor]
 }
 
 type Presentation {
@@ -109,6 +108,12 @@ type Query {
             
     sponsors: [Sponsor!]!
     sponsor(id: String!): Sponsor!
+
+    members: [Member!]!
+    member(id: String!): Member!
+
+    meetupSponsors: [MeetupSponsor!]!
+    meetupSponsor(id: String!): MeetupSponsor!
 
     presentations: [Presentation!]!
     presentation(id: String!): Presentation!

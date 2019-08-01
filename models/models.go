@@ -39,34 +39,32 @@ type Meetup struct {
 	Duration      *string         `json:"duration"`
 	Attendees     int             `json:"attendees"`
 	Address       *string         `json:"address"`
-	Sponsors      *Sponsor        `json:"sponsors"`
+	Sponsors      *MeetupSponsor  `json:"sponsors"`
 	Presentations []*Presentation `json:"presentations"`
 	MeetupGroupID *string         `json:"-"`
 }
 
 type Sponsor struct {
+	ID         string    `json:"id"`
+	Name       *string   `json:"name"`
+	WebsiteURL *string   `json:"websiteURL"`
+	LogoURL    *string   `json:"logoURL"`
+	Countries  []*string `json:"countries"`
+}
+
+type Member struct {
+	ID         string    `json:"id"`
+	Name       *string   `json:"name"`
+	WebsiteURL *string   `json:"websiteURL"`
+	LogoURL    *string   `json:"logoURL"`
+	Countries  []*string `json:"countries"`
+}
+
+type MeetupSponsor struct {
 	ID       string
-	Venue    *Venue   `json:"venue"`
-	Other    []*Other `json:"other"`
-	MeetupID int      `json:"-"`
-}
-
-type Venue struct {
-	ID         string    `json:"id"`
-	Name       *string   `json:"name"`
-	WebsiteURL *string   `json:"websiteURL"`
-	LogoURL    *string   `json:"logoURL"`
-	Countries  []*string `json:"countries"`
-	SponsorID  string    `json:"-"`
-}
-
-type Other struct {
-	ID         string    `json:"id"`
-	Name       *string   `json:"name"`
-	WebsiteURL *string   `json:"websiteURL"`
-	LogoURL    *string   `json:"logoURL"`
-	Countries  []*string `json:"countries"`
-	SponsorID  string    `json:"-"`
+	Venue    *Sponsor   `json:"venue"`
+	Other    []*Sponsor `json:"other"`
+	MeetupID int        `json:"-"`
 }
 
 type Presentation struct {

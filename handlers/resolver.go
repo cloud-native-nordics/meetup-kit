@@ -24,9 +24,7 @@ func (r *Resolver) Company() generated.CompanyResolver {
 func (r *Resolver) Organizer() generated.OrganizerResolver {
 	return &organizerResolver{r}
 }
-func (r *Resolver) Other() generated.OtherResolver {
-	return &otherResolver{r}
-}
+
 func (r *Resolver) Query() generated.QueryResolver {
 	return &queryResolver{r}
 }
@@ -34,8 +32,12 @@ func (r *Resolver) Speaker() generated.SpeakerResolver {
 	return &speakerResolver{r}
 }
 
-func (r *Resolver) Venue() generated.VenueResolver {
-	return &venueResolver{r}
+func (r *Resolver) Sponsor() generated.SponsorResolver {
+	return &sponsorResolver{r}
+}
+
+func (r *Resolver) Member() generated.MemberResolver {
+	return &memberResolver{r}
 }
 
 type companyResolver struct{ *Resolver }
@@ -64,18 +66,18 @@ func (r *organizerResolver) Countries(ctx context.Context, obj *models.Organizer
 	return countries, nil
 }
 
-type otherResolver struct{ *Resolver }
+// type otherResolver struct{ *Resolver }
 
-func (r *otherResolver) Countries(ctx context.Context, obj *models.Other) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "other")
+// func (r *otherResolver) Countries(ctx context.Context, obj *models.Other) ([]*models.Country, error) {
+// 	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "other")
 
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
+// 	if err != nil {
+// 		glog.V(1).Info(err)
+// 		return nil, err
+// 	}
 
-	return countries, nil
-}
+// 	return countries, nil
+// }
 
 type queryResolver struct{ *Resolver }
 
@@ -180,6 +182,46 @@ func (r *queryResolver) Sponsor(ctx context.Context, id string) (*models.Sponsor
 
 	return sponsor, nil
 }
+func (r *queryResolver) Members(ctx context.Context) ([]*models.Member, error) {
+	members, err := r.statsRepository.GetAllMembers()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return members, nil
+}
+func (r *queryResolver) Member(ctx context.Context, id string) (*models.Member, error) {
+	member, err := r.statsRepository.GetMember(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return member, nil
+}
+func (r *queryResolver) MeetupSponsors(ctx context.Context) ([]*models.MeetupSponsor, error) {
+	sponsors, err := r.statsRepository.GetAllMeetupSponsors()
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsors, nil
+}
+func (r *queryResolver) MeetupSponsor(ctx context.Context, id string) (*models.MeetupSponsor, error) {
+	sponsor, err := r.statsRepository.GetMeetupSponsor(id)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsor, nil
+}
 func (r *queryResolver) Presentations(ctx context.Context) ([]*models.Presentation, error) {
 	presentations, err := r.statsRepository.GetAllPresentations()
 
@@ -234,10 +276,23 @@ func (r *speakerResolver) Countries(ctx context.Context, obj *models.Speaker) ([
 	return countries, nil
 }
 
-type venueResolver struct{ *Resolver }
+type sponsorResolver struct{ *Resolver }
 
-func (r *venueResolver) Countries(ctx context.Context, obj *models.Venue) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "venue")
+func (r *sponsorResolver) Countries(ctx context.Context, obj *models.Sponsor) ([]*models.Country, error) {
+	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "sponsor")
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return countries, nil
+}
+
+type memberResolver struct{ *Resolver }
+
+func (r *memberResolver) Countries(ctx context.Context, obj *models.Member) ([]*models.Country, error) {
+	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "member")
 
 	if err != nil {
 		glog.V(1).Info(err)

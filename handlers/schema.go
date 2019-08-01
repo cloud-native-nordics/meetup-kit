@@ -180,9 +180,9 @@ func createDatabaseSchema() *memdb.DBSchema {
 					},
 				},
 			},
-			//Sponsor Schema
-			"sponsor": &memdb.TableSchema{
-				Name: "sponsor",
+			//MeetupSponsor Schema
+			"meetupSponsor": &memdb.TableSchema{
+				Name: "meetupSponsor",
 				Indexes: map[string]*memdb.IndexSchema{
 					"id": &memdb.IndexSchema{
 						Name:    "id",
@@ -194,6 +194,64 @@ func createDatabaseSchema() *memdb.DBSchema {
 						Unique:       false,
 						AllowMissing: true,
 						Indexer:      &memdb.StringFieldIndex{Field: "MeetupID"},
+					},
+				},
+			},
+			//Member Schema
+			"member": &memdb.TableSchema{
+				Name: "member",
+				Indexes: map[string]*memdb.IndexSchema{
+					"id": &memdb.IndexSchema{
+						Name:    "id",
+						Unique:  true,
+						Indexer: &memdb.StringFieldIndex{Field: "ID"},
+					},
+					"name": &memdb.IndexSchema{
+						Name:         "name",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
+					},
+					"websiteURL": &memdb.IndexSchema{
+						Name:         "websiteURL",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "WebsiteURL"},
+					},
+					"logoURL": &memdb.IndexSchema{
+						Name:         "logoURL",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "LogoURL"},
+					},
+				},
+			},
+			//Sponsor Schema
+			"sponsor": &memdb.TableSchema{
+				Name: "sponsor",
+				Indexes: map[string]*memdb.IndexSchema{
+					"id": &memdb.IndexSchema{
+						Name:    "id",
+						Unique:  true,
+						Indexer: &memdb.StringFieldIndex{Field: "ID"},
+					},
+					"name": &memdb.IndexSchema{
+						Name:         "name",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "Name"},
+					},
+					"websiteURL": &memdb.IndexSchema{
+						Name:         "websiteURL",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "WebsiteURL"},
+					},
+					"logoURL": &memdb.IndexSchema{
+						Name:         "logoURL",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "LogoURL"},
 					},
 				},
 			},
@@ -224,12 +282,6 @@ func createDatabaseSchema() *memdb.DBSchema {
 						AllowMissing: true,
 						Indexer:      &memdb.StringFieldIndex{Field: "LogoURL"},
 					},
-					"sponsorID": &memdb.IndexSchema{
-						Name:         "sponsorID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "SponsorID"},
-					},
 				},
 			},
 			//Other Schema
@@ -258,12 +310,6 @@ func createDatabaseSchema() *memdb.DBSchema {
 						Unique:       false,
 						AllowMissing: true,
 						Indexer:      &memdb.StringFieldIndex{Field: "LogoURL"},
-					},
-					"sponsorID": &memdb.IndexSchema{
-						Name:         "sponsorID",
-						Unique:       false,
-						AllowMissing: true,
-						Indexer:      &memdb.StringFieldIndex{Field: "SponsorID"},
 					},
 				},
 			},

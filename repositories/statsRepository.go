@@ -177,6 +177,76 @@ func (sr *StatsRepository) GetSponsor(id string) (*models.Sponsor, error) {
 	return &out, nil
 }
 
+func (sr *StatsRepository) GetAllMeetupSponsors() ([]*models.MeetupSponsor, error) {
+	output := []*models.MeetupSponsor{}
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	// List all sponsors
+	it, err := txn.Get("meetupSponsor", "id")
+	if err != nil {
+		return nil, err
+	}
+
+	for obj := it.Next(); obj != nil; obj = it.Next() {
+		p := obj.(models.MeetupSponsor)
+		output = append(output, &p)
+	}
+
+	return output, nil
+}
+
+func (sr *StatsRepository) GetMeetupSponsor(id string) (*models.MeetupSponsor, error) {
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	//Get sponsor by id
+	it, err := txn.First("meetupSponsor", "id", id)
+	if err != nil {
+		return nil, err
+	}
+
+	out := it.(models.MeetupSponsor)
+	return &out, nil
+}
+
+func (sr *StatsRepository) GetMember(id string) (*models.Member, error) {
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	//Get sponsor by id
+	it, err := txn.First("member", "id", id)
+	if err != nil {
+		return nil, err
+	}
+
+	out := it.(models.Member)
+	return &out, nil
+}
+
+func (sr *StatsRepository) GetAllMembers() ([]*models.Member, error) {
+	output := []*models.Member{}
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	// List all members
+	it, err := txn.Get("member", "id")
+	if err != nil {
+		return nil, err
+	}
+
+	for obj := it.Next(); obj != nil; obj = it.Next() {
+		p := obj.(models.Member)
+		output = append(output, &p)
+	}
+
+	return output, nil
+}
+
 func (sr *StatsRepository) GetAllPresentations() ([]*models.Presentation, error) {
 	output := []*models.Presentation{}
 	// Create read-only transaction

@@ -24,13 +24,15 @@ type StatsManager struct {
 }
 
 type unmarshalledData struct {
-	meetupGroups    []models.MeetupGroup
-	organizers      []models.Organizer
-	companies       []models.Company
-	meetups         []models.Meetup
-	sponsors        []models.Sponsor
-	others          []models.Other
-	venues          []models.Venue
+	meetupGroups   []models.MeetupGroup
+	organizers     []models.Organizer
+	companies      []models.Company
+	meetups        []models.Meetup
+	sponsors       []models.Sponsor
+	members        []models.Member
+	meetupSponsors []models.MeetupSponsor
+	// others          []models.Other
+	// venues          []models.Venue
 	speakers        []models.Speaker
 	presentations   []models.Presentation
 	countries       []models.Country
@@ -39,6 +41,8 @@ type unmarshalledData struct {
 
 type jsonStructure struct {
 	MeetupGroups []models.MeetupGroup `json:"meetupGroups"`
+	Sponsors     []models.Sponsor     `json:"sponsors"`
+	Members      []models.Member      `json:"members"`
 }
 
 //NewStatsManager fetches the stats.json file, marshals to structs, creates in-mem db
@@ -102,7 +106,7 @@ func (sm *StatsManager) fetchStats() error {
 
 //Create models from json file
 func (sm *StatsManager) unmarshallData() (*unmarshalledData, error) {
-	var meetupGroups jsonStructure
+	var data jsonStructure
 	output := &unmarshalledData{}
 
 	file, err := ioutil.ReadFile(sm.filepath)
@@ -112,14 +116,16 @@ func (sm *StatsManager) unmarshallData() (*unmarshalledData, error) {
 	}
 
 	glog.V(5).Info("Unmarhsalling stats.json")
-	err = json.Unmarshal(file, &meetupGroups)
+	err = json.Unmarshal(file, &data)
 
 	if err != nil {
 		return nil, err
 	}
 
 	sm.generateCountries(output)
-	sm.generateMeetupGroups(output, meetupGroups.MeetupGroups)
+	sm.generateSponsors(output, data.Sponsors)
+	sm.generateMembers(output, data.Members)
+	sm.generateMeetupGroups(output, data.MeetupGroups)
 
 	return output, nil
 }
@@ -168,31 +174,51 @@ func (sm *StatsManager) generateOrganizers(output *unmarshalledData, organizers 
 	}
 }
 
-func (sm *StatsManager) generateSponsors(output *unmarshalledData, sponsors *models.Sponsor, meetupID int) {
+func (sm *StatsManager) generateSponsors(output *unmarshalledData, sponsors []models.Sponsor) {
+	if sponsors != nil {
+		for _, sponsor := range sponsors {
+			sm.generateCountryRelation(output, sponsor.Countries, sponsor.ID, "sponsor")
+			output.sponsors = append(output.sponsors, sponsor)
+
+		}
+	}
+}
+
+func (sm *StatsManager) generateMembers(output *unmarshalledData, members []models.Member) {
+	if members != nil {
+		for _, member := range members {
+			sm.generateCountryRelation(output, member.Countries, member.ID, "member")
+			output.members = append(output.members, member)
+
+		}
+	}
+}
+
+func (sm *StatsManager) generateMeetupSponsors(output *unmarshalledData, sponsors *models.MeetupSponsor, meetupID int) {
 	if sponsors != nil {
 		sponsorsToBe := sponsors
 		sponsorsToBe.ID = strconv.Itoa(rand.Int())
 		sponsorsToBe.MeetupID = meetupID
 
 		//Add venue sponsor
-		if sponsorsToBe.Venue != nil {
-			sponsorsToBe.Venue.SponsorID = sponsorsToBe.ID
-			output.venues = append(output.venues, *sponsorsToBe.Venue)
+		// if sponsorsToBe.Venue != nil {
+		// sponsorsToBe.Venue.SponsorID = sponsorsToBe.ID
+		// output.venues = append(output.venues, *sponsorsToBe.Venue)
 
-			sm.generateCountryRelation(output, sponsorsToBe.Venue.Countries, sponsorsToBe.Venue.ID, "venue")
+		// sm.generateCountryRelation(output, sponsorsToBe.Venue.Countries, sponsorsToBe.Venue.ID, "venue")
 
-		}
+		// }
 
 		//Add other sponsors
-		for _, other := range sponsorsToBe.Other {
-			other.SponsorID = other.ID
-			output.others = append(output.others, *other)
+		// for _, other := range sponsorsToBe.Other {
+		// other.SponsorID = other.ID
+		// output.others = append(output.others, *other)
 
-			sm.generateCountryRelation(output, other.Countries, other.ID, "other")
+		// sm.generateCountryRelation(output, other.Countries, other.ID, "other")
 
-		}
+		// }
 
-		output.sponsors = append(output.sponsors, *sponsorsToBe)
+		output.meetupSponsors = append(output.meetupSponsors, *sponsorsToBe)
 	}
 }
 
@@ -229,7 +255,7 @@ func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups []*mod
 		output.meetups = append(output.meetups, *meetupToBe)
 
 		//Add sponsors
-		sm.generateSponsors(output, meetup.Sponsors, meetupToBe.ID)
+		sm.generateMeetupSponsors(output, meetup.Sponsors, meetupToBe.ID)
 
 		//Add presentations
 		sm.generatePresentations(output, meetup.Presentations, meetup.ID)
@@ -299,6 +325,14 @@ func (sm *StatsManager) populateDatabase(schema *memdb.DBSchema, data *unmarshal
 		}
 	}
 
+	// Insert MeetupSponsors
+	glog.V(5).Infof("Inserting %d Meetup Sponsors", len(data.meetupSponsors))
+	for _, sponsor := range data.meetupSponsors {
+		if err := txn.Insert("meetupSponsor", sponsor); err != nil {
+			return nil, err
+		}
+	}
+
 	// Insert Sponsors
 	glog.V(5).Infof("Inserting %d Sponsors", len(data.sponsors))
 	for _, sponsor := range data.sponsors {
@@ -307,18 +341,10 @@ func (sm *StatsManager) populateDatabase(schema *memdb.DBSchema, data *unmarshal
 		}
 	}
 
-	// Insert Venues
-	glog.V(5).Infof("Inserting %d Venues", len(data.venues))
-	for _, venue := range data.venues {
-		if err := txn.Insert("venue", venue); err != nil {
-			return nil, err
-		}
-	}
-
-	// Insert Others
-	glog.V(5).Infof("Inserting %d Others", len(data.others))
-	for _, other := range data.others {
-		if err := txn.Insert("other", other); err != nil {
+	// Insert Members
+	glog.V(5).Infof("Inserting %d Members", len(data.members))
+	for _, member := range data.members {
+		if err := txn.Insert("member", member); err != nil {
 			return nil, err
 		}
 	}
