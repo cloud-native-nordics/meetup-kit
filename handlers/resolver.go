@@ -11,10 +11,11 @@ import (
 
 type Resolver struct {
 	statsRepository *repositories.StatsRepository
+	slackRepository *repositories.SlackRepository
 }
 
-func NewResolver(statsRepository *repositories.StatsRepository) *Resolver {
-	return &Resolver{statsRepository: statsRepository}
+func NewResolver(statsRepository *repositories.StatsRepository, slackRepository *repositories.SlackRepository) *Resolver {
+	return &Resolver{statsRepository: statsRepository, slackRepository: slackRepository}
 }
 
 func (r *Resolver) Company() generated.CompanyResolver {
@@ -80,6 +81,11 @@ func (r *organizerResolver) Countries(ctx context.Context, obj *models.Organizer
 // }
 
 type queryResolver struct{ *Resolver }
+
+func (r *queryResolver) SlackInvite(ctx context.Context, email string) (string, error) {
+	res := r.slackRepository.DoInvite(email)
+	return res, nil
+}
 
 func (r *queryResolver) MeetupGroups(ctx context.Context) ([]*models.MeetupGroup, error) {
 	meetupGroups, err := r.statsRepository.GetAllMeetupGroups()

@@ -18,6 +18,9 @@ import (
 
 var port = flag.String("port", "8080", "Application port to use")
 var statsURL = flag.String("stats-url", "https://raw.githubusercontent.com/cloud-native-nordics/meetups/master/config.json", "Location of the stats file")
+var slackToken = flag.String("slack-token", "", "Slack token to produce invites")
+var slackURL = flag.String("slack-url", "https://cloud-native-nordics.slack.com", "URL to the slack community")
+var slackCommunity = flag.String("slack-community", "Cloud Native Nordicsn", "Name of the slack community")
 
 func main() {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
@@ -44,8 +47,9 @@ func main() {
 	db := handlers.NewStatsManager(*statsURL)
 
 	statsRepo := repositories.NewStatsRepository(db)
+	slackRepo := repositories.NewSlackRepository(*slackToken, *slackURL, *slackCommunity)
 
-	resolver := handlers.NewResolver(statsRepo)
+	resolver := handlers.NewResolver(statsRepo, slackRepo)
 
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further

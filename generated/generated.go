@@ -129,6 +129,7 @@ type ComplexityRoot struct {
 		Organizers     func(childComplexity int) int
 		Presentation   func(childComplexity int, id string) int
 		Presentations  func(childComplexity int) int
+		SlackInvite    func(childComplexity int, email string) int
 		Speaker        func(childComplexity int, id string) int
 		Speakers       func(childComplexity int) int
 		Sponsor        func(childComplexity int, id string) int
@@ -183,6 +184,7 @@ type QueryResolver interface {
 	Presentation(ctx context.Context, id string) (*models.Presentation, error)
 	Speakers(ctx context.Context) ([]*models.Speaker, error)
 	Speaker(ctx context.Context, id string) (*models.Speaker, error)
+	SlackInvite(ctx context.Context, email string) (string, error)
 }
 type SpeakerResolver interface {
 	Countries(ctx context.Context, obj *models.Speaker) ([]*models.Country, error)
@@ -640,6 +642,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Presentations(childComplexity), true
 
+	case "Query.slackInvite":
+		if e.complexity.Query.SlackInvite == nil {
+			break
+		}
+
+		args, err := ec.field_Query_slackInvite_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SlackInvite(childComplexity, args["email"].(string)), true
+
 	case "Query.speaker":
 		if e.complexity.Query.Speaker == nil {
 			break
@@ -940,6 +954,8 @@ type Query {
 
     speakers: [Speaker!]!
     speaker(id: String!): Speaker!
+
+    slackInvite(email: String!): String!
 }`},
 )
 
@@ -1056,6 +1072,20 @@ func (ec *executionContext) field_Query_presentation_args(ctx context.Context, r
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_slackInvite_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["email"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["email"] = arg0
 	return args, nil
 }
 
@@ -3341,6 +3371,50 @@ func (ec *executionContext) _Query_speaker(ctx context.Context, field graphql.Co
 	return ec.marshalNSpeaker2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSpeaker(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_slackInvite(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_slackInvite_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SlackInvite(rctx, args["email"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5601,6 +5675,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_speaker(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "slackInvite":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_slackInvite(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
