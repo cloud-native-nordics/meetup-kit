@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"io/ioutil"
@@ -90,6 +91,18 @@ func (sm *StatsManager) fetchStats() error {
 	}
 
 	defer resp.Body.Close()
+
+	// Create the dir if not present
+	workDir, _ := os.Getwd()
+	filesDir := filepath.Join(workDir, "data")
+	if _, err := os.Stat(filesDir); os.IsNotExist(err) {
+		glog.V(5).Infof("Creating data directory in %s", filesDir)
+		err = os.Mkdir(filesDir, os.ModePerm)
+		if err != nil {
+			glog.V(3).Infof("Couldn't create a new directory. %s", err.Error())
+			return err
+		}
+	}
 
 	// Create the file
 	out, err := os.Create(sm.filepath)
