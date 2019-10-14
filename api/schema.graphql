@@ -9,6 +9,8 @@ type MeetupGroup {
     country: String
     organizers: [Organizer!]!
     meetups: [Meetup!]!
+    latitude: Float
+    longitude: Float
 }
 
 type Organizer {

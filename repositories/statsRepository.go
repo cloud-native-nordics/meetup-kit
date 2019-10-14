@@ -364,3 +364,23 @@ func (sr *StatsRepository) GetCountriesForEntity(entityID string, entityType str
 
 	return output, nil
 }
+
+func (sr *StatsRepository) GetMeetupsForMeetupGroup(meetupGroupId string) ([]*models.Meetup, error) {
+	output := []*models.Meetup{}
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	// List all country relations
+	it, err := txn.Get("meetup", "meetupGroupID", meetupGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	for obj := it.Next(); obj != nil; obj = it.Next() {
+		p := obj.(models.Meetup)
+		output = append(output, &p)
+	}
+
+	return output, nil
+}

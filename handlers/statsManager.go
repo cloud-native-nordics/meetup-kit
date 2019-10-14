@@ -41,9 +41,9 @@ type unmarshalledData struct {
 }
 
 type jsonStructure struct {
-	MeetupGroups []models.MeetupGroup `json:"meetupGroups"`
-	Sponsors     []models.Sponsor     `json:"sponsors"`
-	Members      []models.Member      `json:"members"`
+	MeetupGroups []models.MeetupGroupIn `json:"meetupGroups"`
+	Sponsors     []models.Sponsor       `json:"sponsors"`
+	Members      []models.Member        `json:"members"`
 }
 
 //NewStatsManager fetches the stats.json file, marshals to structs, creates in-mem db
@@ -261,7 +261,7 @@ func (sm *StatsManager) generatePresentations(output *unmarshalledData, presenta
 	}
 }
 
-func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups []*models.Meetup, meetupGroupID string) {
+func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups map[string]*models.Meetup, meetupGroupID string) {
 	for _, meetup := range meetups {
 		meetupToBe := meetup
 		meetupToBe.MeetupGroupID = &meetupGroupID
@@ -275,8 +275,21 @@ func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups []*mod
 	}
 }
 
-func (sm *StatsManager) generateMeetupGroups(output *unmarshalledData, meetupGroups []models.MeetupGroup) {
-	output.meetupGroups = meetupGroups
+func (sm *StatsManager) generateMeetupGroups(output *unmarshalledData, meetupGroups []models.MeetupGroupIn) {
+	meetupGroupsConv := []models.MeetupGroup{}
+	for _, group := range meetupGroups {
+		conv := &models.MeetupGroup{
+			MeetupID:  group.MeetupID,
+			Name:      group.Name,
+			City:      group.City,
+			Country:   group.Country,
+			Longitude: group.Longitude,
+			Latitude:  group.Latitude,
+		}
+		meetupGroupsConv = append(meetupGroupsConv, *conv)
+	}
+	output.meetupGroups = meetupGroupsConv
+
 	for _, meetupGroup := range meetupGroups {
 		//Add organizers
 		sm.generateOrganizers(output, meetupGroup.Organizers, meetupGroup.MeetupID)

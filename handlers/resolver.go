@@ -41,6 +41,10 @@ func (r *Resolver) Member() generated.MemberResolver {
 	return &memberResolver{r}
 }
 
+func (r *Resolver) MeetupGroup() generated.MeetupGroupResolver {
+	return &meetupGroupResolver{r}
+}
+
 type companyResolver struct{ *Resolver }
 
 func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([]*models.Country, error) {
@@ -306,4 +310,17 @@ func (r *memberResolver) Countries(ctx context.Context, obj *models.Member) ([]*
 	}
 
 	return countries, nil
+}
+
+type meetupGroupResolver struct{ *Resolver }
+
+func (r *meetupGroupResolver) Meetups(ctx context.Context, obj *models.MeetupGroup) ([]*models.Meetup, error) {
+	meetups, err := r.statsRepository.GetMeetupsForMeetupGroup(obj.MeetupID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetups, nil
 }

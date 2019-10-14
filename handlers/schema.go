@@ -37,6 +37,18 @@ func createDatabaseSchema() *memdb.DBSchema {
 						AllowMissing: true,
 						Indexer:      &memdb.StringFieldIndex{Field: "Country"},
 					},
+					"latitude": &memdb.IndexSchema{
+						Name:         "latitude",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "Latitude"},
+					},
+					"longitude": &memdb.IndexSchema{
+						Name:         "longitude",
+						Unique:       false,
+						AllowMissing: true,
+						Indexer:      &memdb.StringFieldIndex{Field: "Longitude"},
+					},
 				},
 			},
 			//Organizer Schema

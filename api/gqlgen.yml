@@ -18,6 +18,9 @@ resolver:
 models:
   MeetupGroup:
     model: github.com/cloud-native-nordics/stats-api/models.MeetupGroup
+    fields:
+      meetups:
+          resolver: true
   Organizer:
     model: github.com/cloud-native-nordics/stats-api/models.Organizer
   Company:
