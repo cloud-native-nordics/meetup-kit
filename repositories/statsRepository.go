@@ -410,6 +410,49 @@ func (sr *StatsRepository) GetCompanyForSpeaker(id string) (*models.Company, err
 	return nil, nil
 }
 
+func (sr *StatsRepository) GetCountriesForSpeaker(id string) ([]*string, error) {
+	var output []*string
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	presentationRelations, err := txn.Get("presentationToSpeaker", "speakerID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for presRelObj := presentationRelations.Next(); presRelObj != nil; presRelObj = presentationRelations.Next() {
+		presRel := presRelObj.(models.PresentationToSpeaker)
+		meetupRelations, err := txn.Get("meetupToPresentation", "presentationID", presRel.PresentationID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for meetRelObj := meetupRelations.Next(); meetRelObj != nil; meetRelObj = meetupRelations.Next() {
+			meetRel := meetRelObj.(models.MeetupToPresentation)
+
+			meetGrpRelations, err := txn.Get("meetupGroupToMeetup", "meetupID", meetRel.MeetupID)
+			if err != nil {
+				return nil, err
+			}
+
+			for meetGrpRelObj := meetGrpRelations.Next(); meetGrpRelObj != nil; meetGrpRelObj = meetGrpRelations.Next() {
+				meetGrpRel := meetGrpRelObj.(models.MeetupGroupToMeetup)
+
+				it, err := txn.First("meetupGroup", "id", meetGrpRel.MeetupGroupID)
+				if err != nil {
+					return nil, err
+				}
+
+				meetGrp := it.(models.MeetupGroup)
+				output = append(output, &meetGrp.Country)
+			}
+		}
+	}
+	return output, nil
+}
+
 // ### Sponsor ###
 func (sr *StatsRepository) GetCompanyForSponsor(id string) (*models.Company, error) {
 	// Create read-only transaction

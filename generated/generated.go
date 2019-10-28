@@ -107,6 +107,7 @@ type ComplexityRoot struct {
 
 	Speaker struct {
 		Company        func(childComplexity int) int
+		Countries      func(childComplexity int) int
 		Email          func(childComplexity int) int
 		Github         func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -157,6 +158,8 @@ type QueryResolver interface {
 }
 type SpeakerResolver interface {
 	Company(ctx context.Context, obj *models.Speaker) (*models.Company, error)
+
+	Countries(ctx context.Context, obj *models.Speaker) ([]*string, error)
 }
 type SponsorResolver interface {
 	Company(ctx context.Context, obj *models.Sponsor) (*models.Company, error)
@@ -511,6 +514,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Speaker.Company(childComplexity), true
 
+	case "Speaker.countries":
+		if e.complexity.Speaker.Countries == nil {
+			break
+		}
+
+		return e.complexity.Speaker.Countries(childComplexity), true
+
 	case "Speaker.email":
 		if e.complexity.Speaker.Email == nil {
 			break
@@ -665,6 +675,7 @@ type Speaker {
     company: Company
     github: String
     speakersBureau: String
+    countries: [String]!
 }
 
 
@@ -2719,6 +2730,43 @@ func (ec *executionContext) _Speaker_speakersBureau(ctx context.Context, field g
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Speaker_countries(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Speaker",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Speaker().Countries(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Sponsor_role(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4533,6 +4581,20 @@ func (ec *executionContext) _Speaker(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Speaker_github(ctx, field, obj)
 		case "speakersBureau":
 			out.Values[i] = ec._Speaker_speakersBureau(ctx, field, obj)
+		case "countries":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Speaker_countries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5259,6 +5321,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

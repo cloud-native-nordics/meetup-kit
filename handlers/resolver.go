@@ -242,6 +242,17 @@ func (r *speakerResolver) Company(ctx context.Context, obj *models.Speaker) (*mo
 	return company, nil
 }
 
+func (r *speakerResolver) Countries(ctx context.Context, obj *models.Speaker) ([]*string, error) {
+	countries, err := r.statsRepository.GetCountriesForSpeaker(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return countries, nil
+}
+
 type sponsorResolver struct{ *Resolver }
 
 func (r *sponsorResolver) Company(ctx context.Context, obj *models.Sponsor) (*models.Company, error) {
