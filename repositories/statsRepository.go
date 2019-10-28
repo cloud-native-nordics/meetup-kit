@@ -24,7 +24,7 @@ func (sr *StatsRepository) GetAllMeetupGroups() ([]*models.MeetupGroup, error) {
 	defer txn.Abort()
 
 	// List all meetup groups
-	it, err := txn.Get("meetupGroup", "id")
+	it, err := txn.Get("meetupGroup", "meetupID")
 	if err != nil {
 		return nil, err
 	}
@@ -37,38 +37,18 @@ func (sr *StatsRepository) GetAllMeetupGroups() ([]*models.MeetupGroup, error) {
 	return output, nil
 }
 
-func (sr *StatsRepository) GetAllOrganizers() ([]*models.Organizer, error) {
-	output := []*models.Organizer{}
+func (sr *StatsRepository) GetMeetupGroup(id string) (*models.MeetupGroup, error) {
 	// Create read-only transaction
 	txn := sr.db.Txn(false)
 	defer txn.Abort()
 
-	// List all organizers
-	it, err := txn.Get("organizer", "id")
+	//Get meetup group by id
+	it, err := txn.First("meetupGroup", "meetupID", id)
 	if err != nil {
 		return nil, err
 	}
 
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		p := obj.(models.Organizer)
-		output = append(output, &p)
-	}
-
-	return output, nil
-}
-
-func (sr *StatsRepository) GetOrganizer(id string) (*models.Organizer, error) {
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	//Get organizer by id
-	it, err := txn.First("organizer", "id", id)
-	if err != nil {
-		return nil, err
-	}
-
-	out := it.(models.Organizer)
+	out := it.(models.MeetupGroup)
 	return &out, nil
 }
 
@@ -142,111 +122,6 @@ func (sr *StatsRepository) GetMeetup(id int) (*models.Meetup, error) {
 	return &out, nil
 }
 
-func (sr *StatsRepository) GetAllSponsors() ([]*models.Sponsor, error) {
-	output := []*models.Sponsor{}
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	// List all sponsors
-	it, err := txn.Get("sponsor", "id")
-	if err != nil {
-		return nil, err
-	}
-
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		p := obj.(models.Sponsor)
-		output = append(output, &p)
-	}
-
-	return output, nil
-}
-
-func (sr *StatsRepository) GetSponsor(id string) (*models.Sponsor, error) {
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	//Get sponsor by id
-	it, err := txn.First("sponsor", "id", id)
-	if err != nil {
-		return nil, err
-	}
-
-	out := it.(models.Sponsor)
-	return &out, nil
-}
-
-func (sr *StatsRepository) GetAllMeetupSponsors() ([]*models.MeetupSponsor, error) {
-	output := []*models.MeetupSponsor{}
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	// List all sponsors
-	it, err := txn.Get("meetupSponsor", "id")
-	if err != nil {
-		return nil, err
-	}
-
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		p := obj.(models.MeetupSponsor)
-		output = append(output, &p)
-	}
-
-	return output, nil
-}
-
-func (sr *StatsRepository) GetMeetupSponsor(id string) (*models.MeetupSponsor, error) {
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	//Get sponsor by id
-	it, err := txn.First("meetupSponsor", "id", id)
-	if err != nil {
-		return nil, err
-	}
-
-	out := it.(models.MeetupSponsor)
-	return &out, nil
-}
-
-func (sr *StatsRepository) GetMember(id string) (*models.Member, error) {
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	//Get sponsor by id
-	it, err := txn.First("member", "id", id)
-	if err != nil {
-		return nil, err
-	}
-
-	out := it.(models.Member)
-	return &out, nil
-}
-
-func (sr *StatsRepository) GetAllMembers() ([]*models.Member, error) {
-	output := []*models.Member{}
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	// List all members
-	it, err := txn.Get("member", "id")
-	if err != nil {
-		return nil, err
-	}
-
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		p := obj.(models.Member)
-		output = append(output, &p)
-	}
-
-	return output, nil
-}
-
 func (sr *StatsRepository) GetAllPresentations() ([]*models.Presentation, error) {
 	output := []*models.Presentation{}
 	// Create read-only transaction
@@ -315,72 +190,4 @@ func (sr *StatsRepository) GetSpeaker(id string) (*models.Speaker, error) {
 
 	out := it.(models.Speaker)
 	return &out, nil
-}
-
-func (sr *StatsRepository) GetMeetupGroup(id string) (*models.MeetupGroup, error) {
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	//Get meetup group by id
-	it, err := txn.First("meetupGroup", "id", id)
-	if err != nil {
-		return nil, err
-	}
-
-	out := it.(models.MeetupGroup)
-	return &out, nil
-}
-
-func (sr *StatsRepository) GetCountriesForEntity(entityID string, entityType string) ([]*models.Country, error) {
-	output := []*models.Country{}
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	// List all country relations
-	it, err := txn.Get("entityToCountry", "id", entityID)
-	if err != nil {
-		return nil, err
-	}
-
-	entityToCountry := []*models.EntityToCountry{}
-
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		p := obj.(models.EntityToCountry)
-		entityToCountry = append(entityToCountry, &p)
-	}
-
-	for _, entityToCountry := range entityToCountry {
-		it, err := txn.Get("country", "id", *entityToCountry.CountryID)
-		if err != nil {
-			return nil, err
-		}
-		for obj := it.Next(); obj != nil; obj = it.Next() {
-			p := obj.(models.Country)
-			output = append(output, &p)
-		}
-	}
-
-	return output, nil
-}
-
-func (sr *StatsRepository) GetMeetupsForMeetupGroup(meetupGroupId string) ([]*models.Meetup, error) {
-	output := []*models.Meetup{}
-	// Create read-only transaction
-	txn := sr.db.Txn(false)
-	defer txn.Abort()
-
-	// List all country relations
-	it, err := txn.Get("meetup", "meetupGroupID", meetupGroupId)
-	if err != nil {
-		return nil, err
-	}
-
-	for obj := it.Next(); obj != nil; obj = it.Next() {
-		p := obj.(models.Meetup)
-		output = append(output, &p)
-	}
-
-	return output, nil
 }

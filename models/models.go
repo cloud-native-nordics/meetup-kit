@@ -1,113 +1,166 @@
 package models
 
+type CompanyIn struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	WebsiteURL string `json:"websiteURL"`
+	LogoURL    string `json:"logoURL"`
+}
+
+type SpeakerIn struct {
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	Title          *string `json:"title"`
+	Email          string  `json:"email"`
+	Company        string  `json:"company"`
+	Github         string  `json:"github"`
+	Twitter        *string `json:"twitter"`
+	SpeakersBureau string  `json:"speakersBureau"`
+}
+
 type MeetupGroupIn struct {
-	MeetupID   string             `json:"meetupID"`
-	Name       *string            `json:"name"`
-	City       *string            `json:"city"`
-	Country    *string            `json:"country"`
-	Longitude  float64            `json:"longitude"`
-	Latitude   float64            `json:"latitude"`
-	Organizers []*Organizer       `json:"organizers"`
-	Meetups    map[string]*Meetup `json:"meetups"`
+	Photo            *string              `json:"photo"`
+	Name             *string              `json:"name"`
+	City             *string              `json:"city"`
+	Country          *string              `json:"country"`
+	Description      *string              `json:"description"`
+	SponsorTiers     map[string]string    `json:"sponsorTiers"`
+	MeetupID         string               `json:"meetupID"`
+	Organizers       []string             `json:"organizers"`
+	CfpLink          string               `json:"cfpLink"`
+	Latitude         float64              `json:"latitude"`
+	Longitude        float64              `json:"longitude"`
+	EcosystemMembers []string             `json:"ecosystemMembers"`
+	Meetups          map[string]*MeetupIn `json:"meetups"`
+}
+
+type MeetupIn struct {
+	ID            int               `json:"id"`
+	Name          string            `json:"name"`
+	Date          string            `json:"date"`
+	Duration      string            `json:"duration"`
+	Attendees     int               `json:"attendees"`
+	Address       string            `json:"address"`
+	Recording     string            `json:"recording"`
+	Sponsors      []*SponsorIn      `json:"sponsors"`
+	Presentations []*PresentationIn `json:"presentations"`
+}
+
+type SponsorIn struct {
+	Company string `json:"company"`
+	Role    string `json:"role"`
+}
+
+type PresentationIn struct {
+	Duration string    `json:"duration"`
+	Title    string    `json:"title"`
+	Slides   string    `json:"slides"`
+	Speakers []*string `json:"speakers"`
 }
 
 type MeetupGroup struct {
-	MeetupID   string       `json:"meetupID"`
-	Name       *string      `json:"name"`
-	City       *string      `json:"city"`
-	Country    *string      `json:"country"`
-	Longitude  float64      `json:"longitude"`
-	Latitude   float64      `json:"latitude"`
-	Organizers []*Organizer `json:"organizers"`
-	Meetups    []*Meetup    `json:"meetups"`
-}
-
-type Organizer struct {
-	ID             string    `json:"id"`
-	Name           *string   `json:"name"`
-	Title          *string   `json:"title"`
-	Email          *string   `json:"email"`
-	Company        *Company  `json:"company"`
-	Countries      []*string `json:"countries"`
-	Github         *string   `json:"github"`
-	Twitter        *string   `json:"twitter"`
-	SpeakersBureau *string   `json:"speakersBureau"`
-	MeetupGroupID  *string   `json:"-"`
-}
-
-type Company struct {
-	ID          string    `json:"id"`
-	Name        *string   `json:"name"`
-	WebsiteURL  *string   `json:"websiteURL"`
-	LogoURL     *string   `json:"logoURL"`
-	Countries   []*string `json:"countries"`
-	OrganizerID *string   `json:"-"`
-	SpeakerID   *string   `json:"-"`
+	Photo       string
+	Name        string
+	City        string
+	Country     string
+	Description string
+	MeetupID    string
+	CfpLink     string
+	Longitude   float64
+	Latitude    float64
 }
 
 type Meetup struct {
-	ID            int             `json:"id"`
-	Name          *string         `json:"name"`
-	Date          *string         `json:"date"`
-	Duration      *string         `json:"duration"`
-	Attendees     int             `json:"attendees"`
-	Address       *string         `json:"address"`
-	Sponsors      *MeetupSponsor  `json:"sponsors"`
-	Presentations []*Presentation `json:"presentations"`
-	MeetupGroupID *string         `json:"-"`
+	ID        int
+	Name      string
+	Date      string
+	Duration  string
+	Attendees int
+	Address   string
+	Recording string
+}
+
+type Company struct {
+	ID         string
+	Name       string
+	WebsiteURL string
+	LogoURL    string
 }
 
 type Sponsor struct {
-	ID         string    `json:"id"`
-	Name       *string   `json:"name"`
-	WebsiteURL *string   `json:"websiteURL"`
-	LogoURL    *string   `json:"logoURL"`
-	Countries  []*string `json:"countries"`
+	ID      string
+	Company string
+	Role    string
 }
 
-type Member struct {
-	ID         string    `json:"id"`
-	Name       *string   `json:"name"`
-	WebsiteURL *string   `json:"websiteURL"`
-	LogoURL    *string   `json:"logoURL"`
-	Countries  []*string `json:"countries"`
-}
-
-type MeetupSponsor struct {
-	ID       string
-	Venue    *Sponsor   `json:"venue"`
-	Other    []*Sponsor `json:"other"`
-	MeetupID int        `json:"-"`
+type SponsorTier struct {
+	ID      string
+	Company string
+	Tier    string
 }
 
 type Presentation struct {
-	ID       string     `json:"id"`
-	Duration *string    `json:"duration"`
-	Title    *string    `json:"title"`
-	Slides   *string    `json:"slides"`
-	Speakers []*Speaker `json:"speakers"`
-	MeetupID int        `json:"-"`
+	ID       string
+	Duration string
+	Title    string
+	Slides   string
 }
 
 type Speaker struct {
-	ID             string    `json:"id"`
-	Name           *string   `json:"name"`
-	Title          *string   `json:"title"`
-	Email          *string   `json:"email"`
-	Company        *Company  `json:"company"`
-	Countries      []*string `json:"countries"`
-	Github         *string   `json:"github"`
-	SpeakersBureau *string   `json:"speakersBureau"`
-	PresentationID *string   `json:"-"`
+	ID             string
+	Name           string
+	Title          *string
+	Email          string
+	Github         string
+	Twitter        *string
+	SpeakersBureau string
 }
 
-type Country struct {
-	ID   *string `json:"-"`
-	Name *string `json:"-"`
+//Mapping Tables
+type SpeakerToCompany struct {
+	ID        string
+	SpeakerID string
+	CompanyID string
 }
 
-type EntityToCountry struct {
-	CountryID  *string `json:"-"`
-	ID         *string `json:"-"`
-	EntityType string  `json:"-"`
+type SponsorTierToMeetupGroup struct {
+	ID            string
+	MeetupGroupID string
+	SponsorTierID string
+}
+
+type MeetupGroupToOrganizer struct {
+	ID            string
+	MeetupGroupID string
+	OrganizerID   string
+}
+
+type MeetupGroupToEcosystemMember struct {
+	ID            string
+	MeetupGroupID string
+	CompanyID     string
+}
+
+type MeetupGroupToMeetup struct {
+	ID            string
+	MeetupGroupID string
+	MeetupID      int
+}
+
+type MeetupToSponsor struct {
+	ID        string
+	MeetupID  int
+	SponsorID string
+}
+
+type MeetupToPresentation struct {
+	ID             string
+	MeetupID       int
+	PresentationID string
+}
+
+type PresentationToSpeaker struct {
+	ID             string
+	PresentationID string
+	SpeakerID      string
 }
