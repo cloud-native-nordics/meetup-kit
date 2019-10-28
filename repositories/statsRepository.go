@@ -446,7 +446,9 @@ func (sr *StatsRepository) GetCountriesForSpeaker(id string) ([]*string, error) 
 				}
 
 				meetGrp := it.(models.MeetupGroup)
-				output = append(output, &meetGrp.Country)
+				if !contains(output, &meetGrp.Country) {
+					output = append(output, &meetGrp.Country)
+				}
 			}
 		}
 	}
@@ -475,4 +477,15 @@ func (sr *StatsRepository) GetCompanyForSponsor(id string) (*models.Company, err
 		return &result, nil
 	}
 	return nil, nil
+}
+
+// ### Helpers ###
+func contains(slice []*string, item *string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[*s] = struct{}{}
+	}
+
+	_, ok := set[*item]
+	return ok
 }
