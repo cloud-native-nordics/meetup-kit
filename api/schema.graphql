@@ -35,6 +35,7 @@ type Company {
     name: String
     websiteURL: String
     logoURL: String
+    countries: [String]!
 }
 
 type Meetup {

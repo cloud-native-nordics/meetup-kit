@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Company() CompanyResolver
 	Meetup() MeetupResolver
 	MeetupGroup() MeetupGroupResolver
 	Presentation() PresentationResolver
@@ -49,6 +50,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Company struct {
+		Countries  func(childComplexity int) int
 		ID         func(childComplexity int) int
 		LogoURL    func(childComplexity int) int
 		Name       func(childComplexity int) int
@@ -128,6 +130,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type CompanyResolver interface {
+	Countries(ctx context.Context, obj *models.Company) ([]*string, error)
+}
 type MeetupResolver interface {
 	Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error)
 	Presentations(ctx context.Context, obj *models.Meetup) ([]*models.Presentation, error)
@@ -182,6 +187,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Company.countries":
+		if e.complexity.Company.Countries == nil {
+			break
+		}
+
+		return e.complexity.Company.Countries(childComplexity), true
 
 	case "Company.id":
 		if e.complexity.Company.ID == nil {
@@ -684,6 +696,7 @@ type Company {
     name: String
     websiteURL: String
     logoURL: String
+    countries: [String]!
 }
 
 type Meetup {
@@ -1012,6 +1025,43 @@ func (ec *executionContext) _Company_logoURL(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Company_countries(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Company",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Company().Countries(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_id(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -4125,7 +4175,7 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Company_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Company_name(ctx, field, obj)
@@ -4133,6 +4183,20 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Company_websiteURL(ctx, field, obj)
 		case "logoURL":
 			out.Values[i] = ec._Company_logoURL(ctx, field, obj)
+		case "countries":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Company_countries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

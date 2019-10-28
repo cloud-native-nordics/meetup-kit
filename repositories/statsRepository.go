@@ -207,6 +207,43 @@ func (sr *StatsRepository) GetCompany(id string) (*models.Company, error) {
 	return &out, nil
 }
 
+func (sr *StatsRepository) GetCountriesForCompany(id string) ([]*string, error) {
+	var output []*string
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	sponsorTierRelations, err := txn.Get("sponsorTierToCompany", "companyID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for sponTierRelObj := sponsorTierRelations.Next(); sponTierRelObj != nil; sponTierRelObj = sponsorTierRelations.Next() {
+		sponTierRel := sponTierRelObj.(models.SponsorTierToCompany)
+		meetupGrpRelations, err := txn.Get("sponsorTierToMeetupGroup", "sponsorTierID", sponTierRel.SponsorTierID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for meetGrpRelObj := meetupGrpRelations.Next(); meetGrpRelObj != nil; meetGrpRelObj = meetupGrpRelations.Next() {
+			meetGrpRel := meetGrpRelObj.(models.SponsorTierToMeetupGroup)
+
+			it, err := txn.First("meetupGroup", "id", meetGrpRel.MeetupGroupID)
+			if err != nil {
+				return nil, err
+			}
+
+			meetGrp := it.(models.MeetupGroup)
+			if !contains(output, &meetGrp.Country) {
+				output = append(output, &meetGrp.Country)
+			}
+		}
+	}
+
+	return output, nil
+}
+
 // ### Meetups ###
 func (sr *StatsRepository) GetAllMeetups() ([]*models.Meetup, error) {
 	output := []*models.Meetup{}

@@ -38,6 +38,9 @@ func (r *Resolver) Speaker() generated.SpeakerResolver {
 func (r *Resolver) Sponsor() generated.SponsorResolver {
 	return &sponsorResolver{r}
 }
+func (r *Resolver) Company() generated.CompanyResolver {
+	return &companyResolver{r}
+}
 func (r *Resolver) SponsorTier() generated.SponsorTierResolver {
 	return &sponsorTierResolver{r}
 }
@@ -119,6 +122,19 @@ func (r *presentationResolver) Speakers(ctx context.Context, obj *models.Present
 	}
 
 	return speakers, nil
+}
+
+type companyResolver struct{ *Resolver }
+
+func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([]*string, error) {
+	countries, err := r.statsRepository.GetCountriesForCompany(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return countries, nil
 }
 
 type queryResolver struct{ *Resolver }
