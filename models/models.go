@@ -88,15 +88,13 @@ type Company struct {
 }
 
 type Sponsor struct {
-	ID      string
-	Company string
-	Role    string
+	ID   string
+	Role string
 }
 
 type SponsorTier struct {
-	ID      string
-	Company string
-	Tier    string
+	ID   string
+	Tier string
 }
 
 type Presentation struct {
@@ -129,6 +127,12 @@ type SponsorTierToMeetupGroup struct {
 	SponsorTierID string
 }
 
+type SponsorTierToCompany struct {
+	ID            string
+	SponsorTierID string
+	CompanyID     string
+}
+
 type MeetupGroupToOrganizer struct {
 	ID            string
 	MeetupGroupID string
@@ -151,6 +155,12 @@ type MeetupToSponsor struct {
 	ID        string
 	MeetupID  int
 	SponsorID string
+}
+
+type SponsorToCompany struct {
+	ID        string
+	SponsorID string
+	CompanyID string
 }
 
 type MeetupToPresentation struct {

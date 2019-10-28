@@ -30,12 +30,14 @@ type unmarshalledData struct {
 	meetupGroups                 []models.MeetupGroup
 	sponsorTiers                 []models.SponsorTier
 	sponsorTierToMeetupGroup     []models.SponsorTierToMeetupGroup
+	sponsorTierToCompany         []models.SponsorTierToCompany
 	meetupGroupToOrganizer       []models.MeetupGroupToOrganizer
 	meetupGroupToEcosystemMember []models.MeetupGroupToEcosystemMember
 	meetups                      []models.Meetup
 	meetupGroupToMeetup          []models.MeetupGroupToMeetup
 	sponsors                     []models.Sponsor
 	meetupToSponsor              []models.MeetupToSponsor
+	sponsorToCompany             []models.SponsorToCompany
 	presentations                []models.Presentation
 	meetupToPresentation         []models.MeetupToPresentation
 	presentationToSpeaker        []models.PresentationToSpeaker
@@ -199,9 +201,8 @@ func (sm *StatsManager) generateMeetupGroups(output *unmarshalledData, meetupGro
 func (sm *StatsManager) generateSponsorTiers(output *unmarshalledData, sponsorTiers map[string]string, meetupGroupID string) {
 	for company, tier := range sponsorTiers {
 		newSponsorTier := &models.SponsorTier{
-			ID:      uuid.New().String(),
-			Company: company,
-			Tier:    tier,
+			ID:   uuid.New().String(),
+			Tier: tier,
 		}
 		output.sponsorTiers = append(output.sponsorTiers, *newSponsorTier)
 		newSponsorTierToMeetupGroup := &models.SponsorTierToMeetupGroup{
@@ -210,6 +211,12 @@ func (sm *StatsManager) generateSponsorTiers(output *unmarshalledData, sponsorTi
 			SponsorTierID: newSponsorTier.ID,
 		}
 		output.sponsorTierToMeetupGroup = append(output.sponsorTierToMeetupGroup, *newSponsorTierToMeetupGroup)
+		newSponsorTierToCompany := &models.SponsorTierToCompany{
+			ID:            uuid.New().String(),
+			SponsorTierID: newSponsorTier.ID,
+			CompanyID:     company,
+		}
+		output.sponsorTierToCompany = append(output.sponsorTierToCompany, *newSponsorTierToCompany)
 	}
 }
 
@@ -262,9 +269,8 @@ func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups map[st
 func (sm *StatsManager) generateSponsors(output *unmarshalledData, sponsors []*models.SponsorIn, meetupID int) {
 	for _, sponsor := range sponsors {
 		newSponsor := &models.Sponsor{
-			ID:      uuid.New().String(),
-			Company: sponsor.Company,
-			Role:    sponsor.Role,
+			ID:   uuid.New().String(),
+			Role: sponsor.Role,
 		}
 		output.sponsors = append(output.sponsors, *newSponsor)
 		newMeetupToSponsor := &models.MeetupToSponsor{
@@ -273,6 +279,12 @@ func (sm *StatsManager) generateSponsors(output *unmarshalledData, sponsors []*m
 			MeetupID:  meetupID,
 		}
 		output.meetupToSponsor = append(output.meetupToSponsor, *newMeetupToSponsor)
+		newSponsorToCompany := &models.SponsorToCompany{
+			ID:        uuid.New().String(),
+			SponsorID: newSponsor.ID,
+			CompanyID: sponsor.Company,
+		}
+		output.sponsorToCompany = append(output.sponsorToCompany, *newSponsorToCompany)
 	}
 }
 
@@ -359,6 +371,22 @@ func (sm *StatsManager) populateDatabase(schema *memdb.DBSchema, data *unmarshal
 	glog.V(5).Infof("Inserting %d SponsorTierToMeetupGroup Relations", len(data.sponsorTierToMeetupGroup))
 	for _, relation := range data.sponsorTierToMeetupGroup {
 		if err := txn.Insert("sponsorTierToMeetupGroup", relation); err != nil {
+			return nil, err
+		}
+	}
+
+	// Insert SponsorTierToCompany
+	glog.V(5).Infof("Inserting %d SponsorTierToCompany Relations", len(data.sponsorTierToCompany))
+	for _, relation := range data.sponsorTierToCompany {
+		if err := txn.Insert("sponsorTierToCompany", relation); err != nil {
+			return nil, err
+		}
+	}
+
+	// Insert SponsorToCompany
+	glog.V(5).Infof("Inserting %d SponsorToCompany Relations", len(data.sponsorToCompany))
+	for _, relation := range data.sponsorToCompany {
+		if err := txn.Insert("sponsorToCompany", relation); err != nil {
 			return nil, err
 		}
 	}
