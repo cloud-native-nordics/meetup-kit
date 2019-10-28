@@ -3,37 +3,40 @@ schema {
 }
 
 type MeetupGroup {
-    meetupID: String!
+    photo: String
     name: String
-    city: String
-    country: String
-    organizers: [Organizer!]!
-    meetups: [Meetup!]!
+    city: String!
+    country: String!
+    description: String!
+    sponsorTiers: [SponsorTier!]!
+    meetupID: String!
+    organizers: [Speaker!]!
+    cfpLink: String
     latitude: Float
     longitude: Float
+    ecosystemMembers: [Company!]!
+    meetups: [Meetup!]!
 }
 
-type Organizer {
+type Speaker {
     id: String!
     name: String
     title: String
     email: String
     company: Company
-    countries: [Country]
     github: String
-    twitter: String
     speakersBureau: String
-    # meetupGroups: [MeetupGroup]
+    countries: [String]!
 }
+
 
 type Company {
     id: String!
     name: String
     websiteURL: String
     logoURL: String
-    countries: [Country]
-    # organizers: [Organizer]
-    # speakers: [Speaker]
+    countries: [String]!
+    sponsorTiers: [SponsorTier!]!
 }
 
 type Meetup {
@@ -43,31 +46,21 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
-    sponsors: MeetupSponsor
+    recording: String
+    sponsors: [Sponsor]!
     presentations: [Presentation]
-    # meetupGroup: MeetupGroup
-
-}
-
-type Member {
-    id: String!
-    name: String
-    websiteURL: String
-    logoURL: String
-    countries: [Country]
 }
 
 type Sponsor {
-    id: String!
-    name: String
-    websiteURL: String
-    logoURL: String
-    countries: [Country]
+    role: String!
+    company: Company!
 }
-type MeetupSponsor {
+
+type SponsorTier {
     id: String!
-    venue: Sponsor
-    other: [Sponsor]
+    tier: String!
+    company: Company!
+    meetupGroups: [MeetupGroup!]!
 }
 
 type Presentation {
@@ -78,44 +71,15 @@ type Presentation {
     speakers: [Speaker]
 }
 
-type Speaker {
-    id: String!
-    name: String
-    title: String
-    email: String
-    company: Company
-    countries: [Country]
-    github: String
-    speakersBureau: String
-}
-
-type Country {
-    id: String
-    name: String
-}
-
-
 type Query {
     meetupGroups: [MeetupGroup!]!
     meetupGroup(meetupID: String!): MeetupGroup!
-    
-    organizers: [Organizer!]!
-    organizer(id: String!): Organizer!
         
     companies: [Company!]!
     company(id: String!): Company!
         
     meetups: [Meetup!]!
     meetup(id: Int!): Meetup!
-            
-    sponsors: [Sponsor!]!
-    sponsor(id: String!): Sponsor!
-
-    members: [Member!]!
-    member(id: String!): Member!
-
-    meetupSponsors: [MeetupSponsor!]!
-    meetupSponsor(id: String!): MeetupSponsor!
 
     presentations: [Presentation!]!
     presentation(id: String!): Presentation!

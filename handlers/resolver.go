@@ -9,6 +9,8 @@ import (
 	"github.com/golang/glog"
 )
 
+// THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
+
 type Resolver struct {
 	statsRepository *repositories.StatsRepository
 	slackRepository *repositories.SlackRepository
@@ -18,37 +20,114 @@ func NewResolver(statsRepository *repositories.StatsRepository, slackRepository 
 	return &Resolver{statsRepository: statsRepository, slackRepository: slackRepository}
 }
 
-func (r *Resolver) Company() generated.CompanyResolver {
-	return &companyResolver{r}
+func (r *Resolver) Meetup() generated.MeetupResolver {
+	return &meetupResolver{r}
 }
-
-func (r *Resolver) Organizer() generated.OrganizerResolver {
-	return &organizerResolver{r}
+func (r *Resolver) MeetupGroup() generated.MeetupGroupResolver {
+	return &meetupGroupResolver{r}
 }
-
+func (r *Resolver) Presentation() generated.PresentationResolver {
+	return &presentationResolver{r}
+}
 func (r *Resolver) Query() generated.QueryResolver {
 	return &queryResolver{r}
 }
 func (r *Resolver) Speaker() generated.SpeakerResolver {
 	return &speakerResolver{r}
 }
-
 func (r *Resolver) Sponsor() generated.SponsorResolver {
 	return &sponsorResolver{r}
 }
-
-func (r *Resolver) Member() generated.MemberResolver {
-	return &memberResolver{r}
+func (r *Resolver) Company() generated.CompanyResolver {
+	return &companyResolver{r}
+}
+func (r *Resolver) SponsorTier() generated.SponsorTierResolver {
+	return &sponsorTierResolver{r}
 }
 
-func (r *Resolver) MeetupGroup() generated.MeetupGroupResolver {
-	return &meetupGroupResolver{r}
+type meetupResolver struct{ *Resolver }
+
+func (r *meetupResolver) Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error) {
+	sponsors, err := r.statsRepository.GetSponsorsForMeetup(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsors, nil
+}
+func (r *meetupResolver) Presentations(ctx context.Context, obj *models.Meetup) ([]*models.Presentation, error) {
+	presentations, err := r.statsRepository.GetPresentationsForMeetup(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return presentations, nil
+}
+
+type meetupGroupResolver struct{ *Resolver }
+
+func (r *meetupGroupResolver) SponsorTiers(ctx context.Context, obj *models.MeetupGroup) ([]*models.SponsorTier, error) {
+	sponsorTiers, err := r.statsRepository.GetSponsorTiersForMeetupGroup(obj.MeetupID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsorTiers, nil
+}
+func (r *meetupGroupResolver) Organizers(ctx context.Context, obj *models.MeetupGroup) ([]*models.Speaker, error) {
+	organizers, err := r.statsRepository.GetOrganizersForMeetupGroup(obj.MeetupID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return organizers, nil
+}
+func (r *meetupGroupResolver) EcosystemMembers(ctx context.Context, obj *models.MeetupGroup) ([]*models.Company, error) {
+	companies, err := r.statsRepository.GetEcosystemMembersForMeetupGroup(obj.MeetupID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return companies, nil
+}
+func (r *meetupGroupResolver) Meetups(ctx context.Context, obj *models.MeetupGroup) ([]*models.Meetup, error) {
+	meetups, err := r.statsRepository.GetMeetupsForMeetupGroup(obj.MeetupID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetups, nil
+}
+
+type presentationResolver struct{ *Resolver }
+
+func (r *presentationResolver) Speakers(ctx context.Context, obj *models.Presentation) ([]*models.Speaker, error) {
+	speakers, err := r.statsRepository.GetSpeakersForPresentation(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return speakers, nil
 }
 
 type companyResolver struct{ *Resolver }
 
-func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "company")
+func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([]*string, error) {
+	countries, err := r.statsRepository.GetCountriesForCompany(obj.ID)
 
 	if err != nil {
 		glog.V(1).Info(err)
@@ -58,38 +137,18 @@ func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([
 	return countries, nil
 }
 
-type organizerResolver struct{ *Resolver }
-
-func (r *organizerResolver) Countries(ctx context.Context, obj *models.Organizer) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "organizer")
+func (r *companyResolver) SponsorTiers(ctx context.Context, obj *models.Company) ([]*models.SponsorTier, error) {
+	sponsorTiers, err := r.statsRepository.GetSponsorTiersForCompany(obj.ID)
 
 	if err != nil {
 		glog.V(1).Info(err)
 		return nil, err
 	}
 
-	return countries, nil
+	return sponsorTiers, nil
 }
-
-// type otherResolver struct{ *Resolver }
-
-// func (r *otherResolver) Countries(ctx context.Context, obj *models.Other) ([]*models.Country, error) {
-// 	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "other")
-
-// 	if err != nil {
-// 		glog.V(1).Info(err)
-// 		return nil, err
-// 	}
-
-// 	return countries, nil
-// }
 
 type queryResolver struct{ *Resolver }
-
-func (r *queryResolver) SlackInvite(ctx context.Context, email string) (string, error) {
-	res := r.slackRepository.DoInvite(email)
-	return res, nil
-}
 
 func (r *queryResolver) MeetupGroups(ctx context.Context) ([]*models.MeetupGroup, error) {
 	meetupGroups, err := r.statsRepository.GetAllMeetupGroups()
@@ -101,7 +160,6 @@ func (r *queryResolver) MeetupGroups(ctx context.Context) ([]*models.MeetupGroup
 
 	return meetupGroups, nil
 }
-
 func (r *queryResolver) MeetupGroup(ctx context.Context, meetupID string) (*models.MeetupGroup, error) {
 	meetupGroups, err := r.statsRepository.GetMeetupGroup(meetupID)
 
@@ -111,26 +169,6 @@ func (r *queryResolver) MeetupGroup(ctx context.Context, meetupID string) (*mode
 	}
 
 	return meetupGroups, nil
-}
-func (r *queryResolver) Organizers(ctx context.Context) ([]*models.Organizer, error) {
-	organizers, err := r.statsRepository.GetAllOrganizers()
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return organizers, nil
-}
-func (r *queryResolver) Organizer(ctx context.Context, id string) (*models.Organizer, error) {
-	organizer, err := r.statsRepository.GetOrganizer(id)
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return organizer, nil
 }
 func (r *queryResolver) Companies(ctx context.Context) ([]*models.Company, error) {
 	companies, err := r.statsRepository.GetAllCompanies()
@@ -171,66 +209,6 @@ func (r *queryResolver) Meetup(ctx context.Context, id int) (*models.Meetup, err
 	}
 
 	return meetup, nil
-}
-func (r *queryResolver) Sponsors(ctx context.Context) ([]*models.Sponsor, error) {
-	sponsors, err := r.statsRepository.GetAllSponsors()
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return sponsors, nil
-}
-func (r *queryResolver) Sponsor(ctx context.Context, id string) (*models.Sponsor, error) {
-	sponsor, err := r.statsRepository.GetSponsor(id)
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return sponsor, nil
-}
-func (r *queryResolver) Members(ctx context.Context) ([]*models.Member, error) {
-	members, err := r.statsRepository.GetAllMembers()
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return members, nil
-}
-func (r *queryResolver) Member(ctx context.Context, id string) (*models.Member, error) {
-	member, err := r.statsRepository.GetMember(id)
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return member, nil
-}
-func (r *queryResolver) MeetupSponsors(ctx context.Context) ([]*models.MeetupSponsor, error) {
-	sponsors, err := r.statsRepository.GetAllMeetupSponsors()
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return sponsors, nil
-}
-func (r *queryResolver) MeetupSponsor(ctx context.Context, id string) (*models.MeetupSponsor, error) {
-	sponsor, err := r.statsRepository.GetMeetupSponsor(id)
-
-	if err != nil {
-		glog.V(1).Info(err)
-		return nil, err
-	}
-
-	return sponsor, nil
 }
 func (r *queryResolver) Presentations(ctx context.Context) ([]*models.Presentation, error) {
 	presentations, err := r.statsRepository.GetAllPresentations()
@@ -273,10 +251,26 @@ func (r *queryResolver) Speaker(ctx context.Context, id string) (*models.Speaker
 	return speaker, nil
 }
 
+func (r *queryResolver) SlackInvite(ctx context.Context, email string) (string, error) {
+	res := r.slackRepository.DoInvite(email)
+	return res, nil
+}
+
 type speakerResolver struct{ *Resolver }
 
-func (r *speakerResolver) Countries(ctx context.Context, obj *models.Speaker) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "speaker")
+func (r *speakerResolver) Company(ctx context.Context, obj *models.Speaker) (*models.Company, error) {
+	company, err := r.statsRepository.GetCompanyForSpeaker(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return company, nil
+}
+
+func (r *speakerResolver) Countries(ctx context.Context, obj *models.Speaker) ([]*string, error) {
+	countries, err := r.statsRepository.GetCountriesForSpeaker(obj.ID)
 
 	if err != nil {
 		glog.V(1).Info(err)
@@ -288,39 +282,37 @@ func (r *speakerResolver) Countries(ctx context.Context, obj *models.Speaker) ([
 
 type sponsorResolver struct{ *Resolver }
 
-func (r *sponsorResolver) Countries(ctx context.Context, obj *models.Sponsor) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "sponsor")
+func (r *sponsorResolver) Company(ctx context.Context, obj *models.Sponsor) (*models.Company, error) {
+	company, err := r.statsRepository.GetCompanyForSponsor(obj.ID)
 
 	if err != nil {
 		glog.V(1).Info(err)
 		return nil, err
 	}
 
-	return countries, nil
+	return company, nil
 }
 
-type memberResolver struct{ *Resolver }
+type sponsorTierResolver struct{ *Resolver }
 
-func (r *memberResolver) Countries(ctx context.Context, obj *models.Member) ([]*models.Country, error) {
-	countries, err := r.statsRepository.GetCountriesForEntity(obj.ID, "member")
+func (r *sponsorTierResolver) Company(ctx context.Context, obj *models.SponsorTier) (*models.Company, error) {
+	company, err := r.statsRepository.GetCompanyForSponsorTier(obj.ID)
 
 	if err != nil {
 		glog.V(1).Info(err)
 		return nil, err
 	}
 
-	return countries, nil
+	return company, nil
 }
 
-type meetupGroupResolver struct{ *Resolver }
-
-func (r *meetupGroupResolver) Meetups(ctx context.Context, obj *models.MeetupGroup) ([]*models.Meetup, error) {
-	meetups, err := r.statsRepository.GetMeetupsForMeetupGroup(obj.MeetupID)
+func (r *sponsorTierResolver) MeetupGroups(ctx context.Context, obj *models.SponsorTier) ([]*models.MeetupGroup, error) {
+	meetupGroups, err := r.statsRepository.GetMeetupGroupsForSponsorTier(obj.ID)
 
 	if err != nil {
 		glog.V(1).Info(err)
 		return nil, err
 	}
 
-	return meetups, nil
+	return meetupGroups, nil
 }

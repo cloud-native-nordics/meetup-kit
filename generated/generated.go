@@ -36,12 +36,13 @@ type Config struct {
 
 type ResolverRoot interface {
 	Company() CompanyResolver
+	Meetup() MeetupResolver
 	MeetupGroup() MeetupGroupResolver
-	Member() MemberResolver
-	Organizer() OrganizerResolver
+	Presentation() PresentationResolver
 	Query() QueryResolver
 	Speaker() SpeakerResolver
 	Sponsor() SponsorResolver
+	SponsorTier() SponsorTierResolver
 }
 
 type DirectiveRoot struct {
@@ -49,16 +50,12 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Company struct {
-		Countries  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		LogoURL    func(childComplexity int) int
-		Name       func(childComplexity int) int
-		WebsiteURL func(childComplexity int) int
-	}
-
-	Country struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		Countries    func(childComplexity int) int
+		ID           func(childComplexity int) int
+		LogoURL      func(childComplexity int) int
+		Name         func(childComplexity int) int
+		SponsorTiers func(childComplexity int) int
+		WebsiteURL   func(childComplexity int) int
 	}
 
 	Meetup struct {
@@ -69,44 +66,24 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Presentations func(childComplexity int) int
+		Recording     func(childComplexity int) int
 		Sponsors      func(childComplexity int) int
 	}
 
 	MeetupGroup struct {
-		City       func(childComplexity int) int
-		Country    func(childComplexity int) int
-		Latitude   func(childComplexity int) int
-		Longitude  func(childComplexity int) int
-		MeetupID   func(childComplexity int) int
-		Meetups    func(childComplexity int) int
-		Name       func(childComplexity int) int
-		Organizers func(childComplexity int) int
-	}
-
-	MeetupSponsor struct {
-		ID    func(childComplexity int) int
-		Other func(childComplexity int) int
-		Venue func(childComplexity int) int
-	}
-
-	Member struct {
-		Countries  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		LogoURL    func(childComplexity int) int
-		Name       func(childComplexity int) int
-		WebsiteURL func(childComplexity int) int
-	}
-
-	Organizer struct {
-		Company        func(childComplexity int) int
-		Countries      func(childComplexity int) int
-		Email          func(childComplexity int) int
-		Github         func(childComplexity int) int
-		ID             func(childComplexity int) int
-		Name           func(childComplexity int) int
-		SpeakersBureau func(childComplexity int) int
-		Title          func(childComplexity int) int
-		Twitter        func(childComplexity int) int
+		CfpLink          func(childComplexity int) int
+		City             func(childComplexity int) int
+		Country          func(childComplexity int) int
+		Description      func(childComplexity int) int
+		EcosystemMembers func(childComplexity int) int
+		Latitude         func(childComplexity int) int
+		Longitude        func(childComplexity int) int
+		MeetupID         func(childComplexity int) int
+		Meetups          func(childComplexity int) int
+		Name             func(childComplexity int) int
+		Organizers       func(childComplexity int) int
+		Photo            func(childComplexity int) int
+		SponsorTiers     func(childComplexity int) int
 	}
 
 	Presentation struct {
@@ -118,25 +95,17 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Companies      func(childComplexity int) int
-		Company        func(childComplexity int, id string) int
-		Meetup         func(childComplexity int, id int) int
-		MeetupGroup    func(childComplexity int, meetupID string) int
-		MeetupGroups   func(childComplexity int) int
-		MeetupSponsor  func(childComplexity int, id string) int
-		MeetupSponsors func(childComplexity int) int
-		Meetups        func(childComplexity int) int
-		Member         func(childComplexity int, id string) int
-		Members        func(childComplexity int) int
-		Organizer      func(childComplexity int, id string) int
-		Organizers     func(childComplexity int) int
-		Presentation   func(childComplexity int, id string) int
-		Presentations  func(childComplexity int) int
-		SlackInvite    func(childComplexity int, email string) int
-		Speaker        func(childComplexity int, id string) int
-		Speakers       func(childComplexity int) int
-		Sponsor        func(childComplexity int, id string) int
-		Sponsors       func(childComplexity int) int
+		Companies     func(childComplexity int) int
+		Company       func(childComplexity int, id string) int
+		Meetup        func(childComplexity int, id int) int
+		MeetupGroup   func(childComplexity int, meetupID string) int
+		MeetupGroups  func(childComplexity int) int
+		Meetups       func(childComplexity int) int
+		Presentation  func(childComplexity int, id string) int
+		Presentations func(childComplexity int) int
+		SlackInvite   func(childComplexity int, email string) int
+		Speaker       func(childComplexity int, id string) int
+		Speakers      func(childComplexity int) int
 	}
 
 	Speaker struct {
@@ -151,41 +120,44 @@ type ComplexityRoot struct {
 	}
 
 	Sponsor struct {
-		Countries  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		LogoURL    func(childComplexity int) int
-		Name       func(childComplexity int) int
-		WebsiteURL func(childComplexity int) int
+		Company func(childComplexity int) int
+		Role    func(childComplexity int) int
+	}
+
+	SponsorTier struct {
+		Company      func(childComplexity int) int
+		ID           func(childComplexity int) int
+		MeetupGroups func(childComplexity int) int
+		Tier         func(childComplexity int) int
 	}
 }
 
 type CompanyResolver interface {
-	Countries(ctx context.Context, obj *models.Company) ([]*models.Country, error)
+	Countries(ctx context.Context, obj *models.Company) ([]*string, error)
+	SponsorTiers(ctx context.Context, obj *models.Company) ([]*models.SponsorTier, error)
+}
+type MeetupResolver interface {
+	Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error)
+	Presentations(ctx context.Context, obj *models.Meetup) ([]*models.Presentation, error)
 }
 type MeetupGroupResolver interface {
+	SponsorTiers(ctx context.Context, obj *models.MeetupGroup) ([]*models.SponsorTier, error)
+
+	Organizers(ctx context.Context, obj *models.MeetupGroup) ([]*models.Speaker, error)
+
+	EcosystemMembers(ctx context.Context, obj *models.MeetupGroup) ([]*models.Company, error)
 	Meetups(ctx context.Context, obj *models.MeetupGroup) ([]*models.Meetup, error)
 }
-type MemberResolver interface {
-	Countries(ctx context.Context, obj *models.Member) ([]*models.Country, error)
-}
-type OrganizerResolver interface {
-	Countries(ctx context.Context, obj *models.Organizer) ([]*models.Country, error)
+type PresentationResolver interface {
+	Speakers(ctx context.Context, obj *models.Presentation) ([]*models.Speaker, error)
 }
 type QueryResolver interface {
 	MeetupGroups(ctx context.Context) ([]*models.MeetupGroup, error)
 	MeetupGroup(ctx context.Context, meetupID string) (*models.MeetupGroup, error)
-	Organizers(ctx context.Context) ([]*models.Organizer, error)
-	Organizer(ctx context.Context, id string) (*models.Organizer, error)
 	Companies(ctx context.Context) ([]*models.Company, error)
 	Company(ctx context.Context, id string) (*models.Company, error)
 	Meetups(ctx context.Context) ([]*models.Meetup, error)
 	Meetup(ctx context.Context, id int) (*models.Meetup, error)
-	Sponsors(ctx context.Context) ([]*models.Sponsor, error)
-	Sponsor(ctx context.Context, id string) (*models.Sponsor, error)
-	Members(ctx context.Context) ([]*models.Member, error)
-	Member(ctx context.Context, id string) (*models.Member, error)
-	MeetupSponsors(ctx context.Context) ([]*models.MeetupSponsor, error)
-	MeetupSponsor(ctx context.Context, id string) (*models.MeetupSponsor, error)
 	Presentations(ctx context.Context) ([]*models.Presentation, error)
 	Presentation(ctx context.Context, id string) (*models.Presentation, error)
 	Speakers(ctx context.Context) ([]*models.Speaker, error)
@@ -193,10 +165,16 @@ type QueryResolver interface {
 	SlackInvite(ctx context.Context, email string) (string, error)
 }
 type SpeakerResolver interface {
-	Countries(ctx context.Context, obj *models.Speaker) ([]*models.Country, error)
+	Company(ctx context.Context, obj *models.Speaker) (*models.Company, error)
+
+	Countries(ctx context.Context, obj *models.Speaker) ([]*string, error)
 }
 type SponsorResolver interface {
-	Countries(ctx context.Context, obj *models.Sponsor) ([]*models.Country, error)
+	Company(ctx context.Context, obj *models.Sponsor) (*models.Company, error)
+}
+type SponsorTierResolver interface {
+	Company(ctx context.Context, obj *models.SponsorTier) (*models.Company, error)
+	MeetupGroups(ctx context.Context, obj *models.SponsorTier) ([]*models.MeetupGroup, error)
 }
 
 type executableSchema struct {
@@ -242,26 +220,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Company.Name(childComplexity), true
 
+	case "Company.sponsorTiers":
+		if e.complexity.Company.SponsorTiers == nil {
+			break
+		}
+
+		return e.complexity.Company.SponsorTiers(childComplexity), true
+
 	case "Company.websiteURL":
 		if e.complexity.Company.WebsiteURL == nil {
 			break
 		}
 
 		return e.complexity.Company.WebsiteURL(childComplexity), true
-
-	case "Country.id":
-		if e.complexity.Country.ID == nil {
-			break
-		}
-
-		return e.complexity.Country.ID(childComplexity), true
-
-	case "Country.name":
-		if e.complexity.Country.Name == nil {
-			break
-		}
-
-		return e.complexity.Country.Name(childComplexity), true
 
 	case "Meetup.address":
 		if e.complexity.Meetup.Address == nil {
@@ -312,12 +283,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meetup.Presentations(childComplexity), true
 
+	case "Meetup.recording":
+		if e.complexity.Meetup.Recording == nil {
+			break
+		}
+
+		return e.complexity.Meetup.Recording(childComplexity), true
+
 	case "Meetup.sponsors":
 		if e.complexity.Meetup.Sponsors == nil {
 			break
 		}
 
 		return e.complexity.Meetup.Sponsors(childComplexity), true
+
+	case "MeetupGroup.cfpLink":
+		if e.complexity.MeetupGroup.CfpLink == nil {
+			break
+		}
+
+		return e.complexity.MeetupGroup.CfpLink(childComplexity), true
 
 	case "MeetupGroup.city":
 		if e.complexity.MeetupGroup.City == nil {
@@ -332,6 +317,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MeetupGroup.Country(childComplexity), true
+
+	case "MeetupGroup.description":
+		if e.complexity.MeetupGroup.Description == nil {
+			break
+		}
+
+		return e.complexity.MeetupGroup.Description(childComplexity), true
+
+	case "MeetupGroup.ecosystemMembers":
+		if e.complexity.MeetupGroup.EcosystemMembers == nil {
+			break
+		}
+
+		return e.complexity.MeetupGroup.EcosystemMembers(childComplexity), true
 
 	case "MeetupGroup.latitude":
 		if e.complexity.MeetupGroup.Latitude == nil {
@@ -375,124 +374,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MeetupGroup.Organizers(childComplexity), true
 
-	case "MeetupSponsor.id":
-		if e.complexity.MeetupSponsor.ID == nil {
+	case "MeetupGroup.photo":
+		if e.complexity.MeetupGroup.Photo == nil {
 			break
 		}
 
-		return e.complexity.MeetupSponsor.ID(childComplexity), true
+		return e.complexity.MeetupGroup.Photo(childComplexity), true
 
-	case "MeetupSponsor.other":
-		if e.complexity.MeetupSponsor.Other == nil {
+	case "MeetupGroup.sponsorTiers":
+		if e.complexity.MeetupGroup.SponsorTiers == nil {
 			break
 		}
 
-		return e.complexity.MeetupSponsor.Other(childComplexity), true
-
-	case "MeetupSponsor.venue":
-		if e.complexity.MeetupSponsor.Venue == nil {
-			break
-		}
-
-		return e.complexity.MeetupSponsor.Venue(childComplexity), true
-
-	case "Member.countries":
-		if e.complexity.Member.Countries == nil {
-			break
-		}
-
-		return e.complexity.Member.Countries(childComplexity), true
-
-	case "Member.id":
-		if e.complexity.Member.ID == nil {
-			break
-		}
-
-		return e.complexity.Member.ID(childComplexity), true
-
-	case "Member.logoURL":
-		if e.complexity.Member.LogoURL == nil {
-			break
-		}
-
-		return e.complexity.Member.LogoURL(childComplexity), true
-
-	case "Member.name":
-		if e.complexity.Member.Name == nil {
-			break
-		}
-
-		return e.complexity.Member.Name(childComplexity), true
-
-	case "Member.websiteURL":
-		if e.complexity.Member.WebsiteURL == nil {
-			break
-		}
-
-		return e.complexity.Member.WebsiteURL(childComplexity), true
-
-	case "Organizer.company":
-		if e.complexity.Organizer.Company == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Company(childComplexity), true
-
-	case "Organizer.countries":
-		if e.complexity.Organizer.Countries == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Countries(childComplexity), true
-
-	case "Organizer.email":
-		if e.complexity.Organizer.Email == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Email(childComplexity), true
-
-	case "Organizer.github":
-		if e.complexity.Organizer.Github == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Github(childComplexity), true
-
-	case "Organizer.id":
-		if e.complexity.Organizer.ID == nil {
-			break
-		}
-
-		return e.complexity.Organizer.ID(childComplexity), true
-
-	case "Organizer.name":
-		if e.complexity.Organizer.Name == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Name(childComplexity), true
-
-	case "Organizer.speakersBureau":
-		if e.complexity.Organizer.SpeakersBureau == nil {
-			break
-		}
-
-		return e.complexity.Organizer.SpeakersBureau(childComplexity), true
-
-	case "Organizer.title":
-		if e.complexity.Organizer.Title == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Title(childComplexity), true
-
-	case "Organizer.twitter":
-		if e.complexity.Organizer.Twitter == nil {
-			break
-		}
-
-		return e.complexity.Organizer.Twitter(childComplexity), true
+		return e.complexity.MeetupGroup.SponsorTiers(childComplexity), true
 
 	case "Presentation.duration":
 		if e.complexity.Presentation.Duration == nil {
@@ -579,69 +473,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MeetupGroups(childComplexity), true
 
-	case "Query.meetupSponsor":
-		if e.complexity.Query.MeetupSponsor == nil {
-			break
-		}
-
-		args, err := ec.field_Query_meetupSponsor_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.MeetupSponsor(childComplexity, args["id"].(string)), true
-
-	case "Query.meetupSponsors":
-		if e.complexity.Query.MeetupSponsors == nil {
-			break
-		}
-
-		return e.complexity.Query.MeetupSponsors(childComplexity), true
-
 	case "Query.meetups":
 		if e.complexity.Query.Meetups == nil {
 			break
 		}
 
 		return e.complexity.Query.Meetups(childComplexity), true
-
-	case "Query.member":
-		if e.complexity.Query.Member == nil {
-			break
-		}
-
-		args, err := ec.field_Query_member_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Member(childComplexity, args["id"].(string)), true
-
-	case "Query.members":
-		if e.complexity.Query.Members == nil {
-			break
-		}
-
-		return e.complexity.Query.Members(childComplexity), true
-
-	case "Query.organizer":
-		if e.complexity.Query.Organizer == nil {
-			break
-		}
-
-		args, err := ec.field_Query_organizer_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Organizer(childComplexity, args["id"].(string)), true
-
-	case "Query.organizers":
-		if e.complexity.Query.Organizers == nil {
-			break
-		}
-
-		return e.complexity.Query.Organizers(childComplexity), true
 
 	case "Query.presentation":
 		if e.complexity.Query.Presentation == nil {
@@ -692,25 +529,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Speakers(childComplexity), true
-
-	case "Query.sponsor":
-		if e.complexity.Query.Sponsor == nil {
-			break
-		}
-
-		args, err := ec.field_Query_sponsor_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Sponsor(childComplexity, args["id"].(string)), true
-
-	case "Query.sponsors":
-		if e.complexity.Query.Sponsors == nil {
-			break
-		}
-
-		return e.complexity.Query.Sponsors(childComplexity), true
 
 	case "Speaker.company":
 		if e.complexity.Speaker.Company == nil {
@@ -768,40 +586,47 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Speaker.Title(childComplexity), true
 
-	case "Sponsor.countries":
-		if e.complexity.Sponsor.Countries == nil {
+	case "Sponsor.company":
+		if e.complexity.Sponsor.Company == nil {
 			break
 		}
 
-		return e.complexity.Sponsor.Countries(childComplexity), true
+		return e.complexity.Sponsor.Company(childComplexity), true
 
-	case "Sponsor.id":
-		if e.complexity.Sponsor.ID == nil {
+	case "Sponsor.role":
+		if e.complexity.Sponsor.Role == nil {
 			break
 		}
 
-		return e.complexity.Sponsor.ID(childComplexity), true
+		return e.complexity.Sponsor.Role(childComplexity), true
 
-	case "Sponsor.logoURL":
-		if e.complexity.Sponsor.LogoURL == nil {
+	case "SponsorTier.company":
+		if e.complexity.SponsorTier.Company == nil {
 			break
 		}
 
-		return e.complexity.Sponsor.LogoURL(childComplexity), true
+		return e.complexity.SponsorTier.Company(childComplexity), true
 
-	case "Sponsor.name":
-		if e.complexity.Sponsor.Name == nil {
+	case "SponsorTier.id":
+		if e.complexity.SponsorTier.ID == nil {
 			break
 		}
 
-		return e.complexity.Sponsor.Name(childComplexity), true
+		return e.complexity.SponsorTier.ID(childComplexity), true
 
-	case "Sponsor.websiteURL":
-		if e.complexity.Sponsor.WebsiteURL == nil {
+	case "SponsorTier.meetupGroups":
+		if e.complexity.SponsorTier.MeetupGroups == nil {
 			break
 		}
 
-		return e.complexity.Sponsor.WebsiteURL(childComplexity), true
+		return e.complexity.SponsorTier.MeetupGroups(childComplexity), true
+
+	case "SponsorTier.tier":
+		if e.complexity.SponsorTier.Tier == nil {
+			break
+		}
+
+		return e.complexity.SponsorTier.Tier(childComplexity), true
 
 	}
 	return 0, false
@@ -857,37 +682,40 @@ var parsedSchema = gqlparser.MustLoadSchema(
 }
 
 type MeetupGroup {
-    meetupID: String!
+    photo: String
     name: String
-    city: String
-    country: String
-    organizers: [Organizer!]!
-    meetups: [Meetup!]!
+    city: String!
+    country: String!
+    description: String!
+    sponsorTiers: [SponsorTier!]!
+    meetupID: String!
+    organizers: [Speaker!]!
+    cfpLink: String
     latitude: Float
     longitude: Float
+    ecosystemMembers: [Company!]!
+    meetups: [Meetup!]!
 }
 
-type Organizer {
+type Speaker {
     id: String!
     name: String
     title: String
     email: String
     company: Company
-    countries: [Country]
     github: String
-    twitter: String
     speakersBureau: String
-    # meetupGroups: [MeetupGroup]
+    countries: [String]!
 }
+
 
 type Company {
     id: String!
     name: String
     websiteURL: String
     logoURL: String
-    countries: [Country]
-    # organizers: [Organizer]
-    # speakers: [Speaker]
+    countries: [String]!
+    sponsorTiers: [SponsorTier!]!
 }
 
 type Meetup {
@@ -897,31 +725,21 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
-    sponsors: MeetupSponsor
+    recording: String
+    sponsors: [Sponsor]!
     presentations: [Presentation]
-    # meetupGroup: MeetupGroup
-
-}
-
-type Member {
-    id: String!
-    name: String
-    websiteURL: String
-    logoURL: String
-    countries: [Country]
 }
 
 type Sponsor {
-    id: String!
-    name: String
-    websiteURL: String
-    logoURL: String
-    countries: [Country]
+    role: String!
+    company: Company!
 }
-type MeetupSponsor {
+
+type SponsorTier {
     id: String!
-    venue: Sponsor
-    other: [Sponsor]
+    tier: String!
+    company: Company!
+    meetupGroups: [MeetupGroup!]!
 }
 
 type Presentation {
@@ -932,44 +750,15 @@ type Presentation {
     speakers: [Speaker]
 }
 
-type Speaker {
-    id: String!
-    name: String
-    title: String
-    email: String
-    company: Company
-    countries: [Country]
-    github: String
-    speakersBureau: String
-}
-
-type Country {
-    id: String
-    name: String
-}
-
-
 type Query {
     meetupGroups: [MeetupGroup!]!
     meetupGroup(meetupID: String!): MeetupGroup!
-    
-    organizers: [Organizer!]!
-    organizer(id: String!): Organizer!
         
     companies: [Company!]!
     company(id: String!): Company!
         
     meetups: [Meetup!]!
     meetup(id: Int!): Meetup!
-            
-    sponsors: [Sponsor!]!
-    sponsor(id: String!): Sponsor!
-
-    members: [Member!]!
-    member(id: String!): Member!
-
-    meetupSponsors: [MeetupSponsor!]!
-    meetupSponsor(id: String!): MeetupSponsor!
 
     presentations: [Presentation!]!
     presentation(id: String!): Presentation!
@@ -1027,54 +816,12 @@ func (ec *executionContext) field_Query_meetupGroup_args(ctx context.Context, ra
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_meetupSponsor_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_meetup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
 	if tmp, ok := rawArgs["id"]; ok {
 		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_member_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_organizer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1112,20 +859,6 @@ func (ec *executionContext) field_Query_slackInvite_args(ctx context.Context, ra
 }
 
 func (ec *executionContext) field_Query_speaker_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_sponsor_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1240,10 +973,10 @@ func (ec *executionContext) _Company_name(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Company_websiteURL(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
@@ -1274,10 +1007,10 @@ func (ec *executionContext) _Company_websiteURL(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Company_logoURL(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
@@ -1308,10 +1041,10 @@ func (ec *executionContext) _Company_logoURL(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Company_countries(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
@@ -1340,15 +1073,18 @@ func (ec *executionContext) _Company_countries(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Country)
+	res := resTmp.([]*string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCountry2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Country_id(ctx context.Context, field graphql.CollectedField, obj *models.Country) (ret graphql.Marshaler) {
+func (ec *executionContext) _Company_sponsorTiers(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1358,62 +1094,31 @@ func (ec *executionContext) _Country_id(ctx context.Context, field graphql.Colle
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "Country",
+		Object:   "Company",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.Company().SponsorTiers(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Country_name(ctx context.Context, field graphql.CollectedField, obj *models.Country) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
 		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Country",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
+	res := resTmp.([]*models.SponsorTier)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_id(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -1481,10 +1186,10 @@ func (ec *executionContext) _Meetup_name(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_date(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -1515,10 +1220,10 @@ func (ec *executionContext) _Meetup_date(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_duration(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -1549,10 +1254,10 @@ func (ec *executionContext) _Meetup_duration(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_attendees(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -1617,10 +1322,44 @@ func (ec *executionContext) _Meetup_address(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Meetup_recording(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Meetup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Recording, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_sponsors(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -1636,25 +1375,28 @@ func (ec *executionContext) _Meetup_sponsors(ctx context.Context, field graphql.
 		Object:   "Meetup",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Sponsors, nil
+		return ec.resolvers.Meetup().Sponsors(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.MeetupSponsor)
+	res := resTmp.([]*models.Sponsor)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOMeetupSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx, field.Selections, res)
+	return ec.marshalNSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_presentations(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -1670,13 +1412,13 @@ func (ec *executionContext) _Meetup_presentations(ctx context.Context, field gra
 		Object:   "Meetup",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Presentations, nil
+		return ec.resolvers.Meetup().Presentations(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1689,6 +1431,222 @@ func (ec *executionContext) _Meetup_presentations(ctx context.Context, field gra
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOPresentation2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐPresentation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_photo(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Photo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_name(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_city(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.City, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_country(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Country, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_description(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_sponsorTiers(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MeetupGroup().SponsorTiers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.SponsorTier)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MeetupGroup_meetupID(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
@@ -1728,146 +1686,7 @@ func (ec *executionContext) _MeetupGroup_meetupID(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MeetupGroup_name(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MeetupGroup",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MeetupGroup_city(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MeetupGroup",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.City, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MeetupGroup_country(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MeetupGroup",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Country, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _MeetupGroup_organizers(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MeetupGroup",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Organizers, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Organizer)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNOrganizer2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MeetupGroup_meetups(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1886,7 +1705,7 @@ func (ec *executionContext) _MeetupGroup_meetups(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.MeetupGroup().Meetups(rctx, obj)
+		return ec.resolvers.MeetupGroup().Organizers(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1898,10 +1717,44 @@ func (ec *executionContext) _MeetupGroup_meetups(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Meetup)
+	res := resTmp.([]*models.Speaker)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMeetup2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetup(ctx, field.Selections, res)
+	return ec.marshalNSpeaker2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSpeaker(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_cfpLink(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CfpLink, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MeetupGroup_latitude(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
@@ -1972,7 +1825,7 @@ func (ec *executionContext) _MeetupGroup_longitude(ctx context.Context, field gr
 	return ec.marshalOFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MeetupSponsor_id(ctx context.Context, field graphql.CollectedField, obj *models.MeetupSponsor) (ret graphql.Marshaler) {
+func (ec *executionContext) _MeetupGroup_ecosystemMembers(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1982,251 +1835,7 @@ func (ec *executionContext) _MeetupSponsor_id(ctx context.Context, field graphql
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "MeetupSponsor",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MeetupSponsor_venue(ctx context.Context, field graphql.CollectedField, obj *models.MeetupSponsor) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MeetupSponsor",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Venue, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.Sponsor)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MeetupSponsor_other(ctx context.Context, field graphql.CollectedField, obj *models.MeetupSponsor) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MeetupSponsor",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Other, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Sponsor)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Member_id(ctx context.Context, field graphql.CollectedField, obj *models.Member) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Member",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Member_name(ctx context.Context, field graphql.CollectedField, obj *models.Member) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Member",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Member_websiteURL(ctx context.Context, field graphql.CollectedField, obj *models.Member) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Member",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.WebsiteURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Member_logoURL(ctx context.Context, field graphql.CollectedField, obj *models.Member) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Member",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LogoURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Member_countries(ctx context.Context, field graphql.CollectedField, obj *models.Member) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Member",
+		Object:   "MeetupGroup",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
@@ -2235,41 +1844,7 @@ func (ec *executionContext) _Member_countries(ctx context.Context, field graphql
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Member().Countries(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Country)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCountry2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_id(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.MeetupGroup().EcosystemMembers(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2281,13 +1856,13 @@ func (ec *executionContext) _Organizer_id(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]*models.Company)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNCompany2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Organizer_name(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
+func (ec *executionContext) _MeetupGroup_meetups(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2297,143 +1872,7 @@ func (ec *executionContext) _Organizer_name(ctx context.Context, field graphql.C
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_title(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_email(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_company(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Company, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.Company)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_countries(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
+		Object:   "MeetupGroup",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
@@ -2442,121 +1881,22 @@ func (ec *executionContext) _Organizer_countries(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organizer().Countries(rctx, obj)
+		return ec.resolvers.MeetupGroup().Meetups(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Country)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCountry2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_github(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
 		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Github, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
+	res := resTmp.([]*models.Meetup)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_twitter(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Twitter, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Organizer_speakersBureau(ctx context.Context, field graphql.CollectedField, obj *models.Organizer) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Organizer",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SpeakersBureau, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNMeetup2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Presentation_id(ctx context.Context, field graphql.CollectedField, obj *models.Presentation) (ret graphql.Marshaler) {
@@ -2624,10 +1964,10 @@ func (ec *executionContext) _Presentation_duration(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Presentation_title(ctx context.Context, field graphql.CollectedField, obj *models.Presentation) (ret graphql.Marshaler) {
@@ -2658,10 +1998,10 @@ func (ec *executionContext) _Presentation_title(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Presentation_slides(ctx context.Context, field graphql.CollectedField, obj *models.Presentation) (ret graphql.Marshaler) {
@@ -2692,10 +2032,10 @@ func (ec *executionContext) _Presentation_slides(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Presentation_speakers(ctx context.Context, field graphql.CollectedField, obj *models.Presentation) (ret graphql.Marshaler) {
@@ -2711,13 +2051,13 @@ func (ec *executionContext) _Presentation_speakers(ctx context.Context, field gr
 		Object:   "Presentation",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Speakers, nil
+		return ec.resolvers.Presentation().Speakers(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2811,87 +2151,6 @@ func (ec *executionContext) _Query_meetupGroup(ctx context.Context, field graphq
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNMeetupGroup2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupGroup(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_organizers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Organizers(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Organizer)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNOrganizer2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_organizer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_organizer_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Organizer(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.Organizer)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNOrganizer2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_companies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3054,249 +2313,6 @@ func (ec *executionContext) _Query_meetup(ctx context.Context, field graphql.Col
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNMeetup2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetup(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_sponsors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sponsors(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Sponsor)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_sponsor(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_sponsor_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sponsor(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.Sponsor)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_members(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Members(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Member)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMember2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMember(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_member(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_member_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Member(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.Member)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMember2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMember(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_meetupSponsors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MeetupSponsors(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*models.MeetupSponsor)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMeetupSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_meetupSponsor(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_meetupSponsor_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MeetupSponsor(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.MeetupSponsor)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMeetupSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_presentations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3645,10 +2661,10 @@ func (ec *executionContext) _Speaker_name(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Speaker_title(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
@@ -3713,47 +2729,13 @@ func (ec *executionContext) _Speaker_email(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Speaker_company(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Speaker",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Company, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*models.Company)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Speaker_countries(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3772,7 +2754,7 @@ func (ec *executionContext) _Speaker_countries(ctx context.Context, field graphq
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Speaker().Countries(rctx, obj)
+		return ec.resolvers.Speaker().Company(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3781,10 +2763,10 @@ func (ec *executionContext) _Speaker_countries(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Country)
+	res := resTmp.(*models.Company)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCountry2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx, field.Selections, res)
+	return ec.marshalOCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Speaker_github(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
@@ -3815,10 +2797,10 @@ func (ec *executionContext) _Speaker_github(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Speaker_speakersBureau(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
@@ -3849,13 +2831,50 @@ func (ec *executionContext) _Speaker_speakersBureau(ctx context.Context, field g
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Sponsor_id(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
+func (ec *executionContext) _Speaker_countries(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Speaker",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Speaker().Countries(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Sponsor_role(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3866,6 +2885,80 @@ func (ec *executionContext) _Sponsor_id(ctx context.Context, field graphql.Colle
 	}()
 	rctx := &graphql.ResolverContext{
 		Object:   "Sponsor",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Role, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Sponsor_company(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Sponsor",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Sponsor().Company(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Company)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SponsorTier_id(ctx context.Context, field graphql.CollectedField, obj *models.SponsorTier) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SponsorTier",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -3892,7 +2985,7 @@ func (ec *executionContext) _Sponsor_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Sponsor_name(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
+func (ec *executionContext) _SponsorTier_tier(ctx context.Context, field graphql.CollectedField, obj *models.SponsorTier) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3902,7 +2995,7 @@ func (ec *executionContext) _Sponsor_name(ctx context.Context, field graphql.Col
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "Sponsor",
+		Object:   "SponsorTier",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -3911,22 +3004,25 @@ func (ec *executionContext) _Sponsor_name(ctx context.Context, field graphql.Col
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.Tier, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Sponsor_websiteURL(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
+func (ec *executionContext) _SponsorTier_company(ctx context.Context, field graphql.CollectedField, obj *models.SponsorTier) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3936,75 +3032,7 @@ func (ec *executionContext) _Sponsor_websiteURL(ctx context.Context, field graph
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "Sponsor",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.WebsiteURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Sponsor_logoURL(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Sponsor",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LogoURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Sponsor_countries(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Sponsor",
+		Object:   "SponsorTier",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
@@ -4013,19 +3041,59 @@ func (ec *executionContext) _Sponsor_countries(ctx context.Context, field graphq
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Sponsor().Countries(rctx, obj)
+		return ec.resolvers.SponsorTier().Company(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Country)
+	res := resTmp.(*models.Company)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCountry2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx, field.Selections, res)
+	return ec.marshalNCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SponsorTier_meetupGroups(ctx context.Context, field graphql.CollectedField, obj *models.SponsorTier) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SponsorTier",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SponsorTier().MeetupGroups(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.MeetupGroup)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNMeetupGroup2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -5218,34 +4286,25 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Company_countries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var countryImplementors = []string{"Country"}
-
-func (ec *executionContext) _Country(ctx context.Context, sel ast.SelectionSet, obj *models.Country) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, countryImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Country")
-		case "id":
-			out.Values[i] = ec._Country_id(ctx, field, obj)
-		case "name":
-			out.Values[i] = ec._Country_name(ctx, field, obj)
+		case "sponsorTiers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Company_sponsorTiers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5271,7 +4330,7 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 		case "id":
 			out.Values[i] = ec._Meetup_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Meetup_name(ctx, field, obj)
@@ -5283,10 +4342,33 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Meetup_attendees(ctx, field, obj)
 		case "address":
 			out.Values[i] = ec._Meetup_address(ctx, field, obj)
+		case "recording":
+			out.Values[i] = ec._Meetup_recording(ctx, field, obj)
 		case "sponsors":
-			out.Values[i] = ec._Meetup_sponsors(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meetup_sponsors(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "presentations":
-			out.Values[i] = ec._Meetup_presentations(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meetup_presentations(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5309,22 +4391,78 @@ func (ec *executionContext) _MeetupGroup(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MeetupGroup")
+		case "photo":
+			out.Values[i] = ec._MeetupGroup_photo(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._MeetupGroup_name(ctx, field, obj)
+		case "city":
+			out.Values[i] = ec._MeetupGroup_city(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "country":
+			out.Values[i] = ec._MeetupGroup_country(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._MeetupGroup_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "sponsorTiers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MeetupGroup_sponsorTiers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "meetupID":
 			out.Values[i] = ec._MeetupGroup_meetupID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "name":
-			out.Values[i] = ec._MeetupGroup_name(ctx, field, obj)
-		case "city":
-			out.Values[i] = ec._MeetupGroup_city(ctx, field, obj)
-		case "country":
-			out.Values[i] = ec._MeetupGroup_country(ctx, field, obj)
 		case "organizers":
-			out.Values[i] = ec._MeetupGroup_organizers(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MeetupGroup_organizers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "cfpLink":
+			out.Values[i] = ec._MeetupGroup_cfpLink(ctx, field, obj)
+		case "latitude":
+			out.Values[i] = ec._MeetupGroup_latitude(ctx, field, obj)
+		case "longitude":
+			out.Values[i] = ec._MeetupGroup_longitude(ctx, field, obj)
+		case "ecosystemMembers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MeetupGroup_ecosystemMembers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "meetups":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5339,137 +4477,6 @@ func (ec *executionContext) _MeetupGroup(ctx context.Context, sel ast.SelectionS
 				}
 				return res
 			})
-		case "latitude":
-			out.Values[i] = ec._MeetupGroup_latitude(ctx, field, obj)
-		case "longitude":
-			out.Values[i] = ec._MeetupGroup_longitude(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var meetupSponsorImplementors = []string{"MeetupSponsor"}
-
-func (ec *executionContext) _MeetupSponsor(ctx context.Context, sel ast.SelectionSet, obj *models.MeetupSponsor) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, meetupSponsorImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MeetupSponsor")
-		case "id":
-			out.Values[i] = ec._MeetupSponsor_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "venue":
-			out.Values[i] = ec._MeetupSponsor_venue(ctx, field, obj)
-		case "other":
-			out.Values[i] = ec._MeetupSponsor_other(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var memberImplementors = []string{"Member"}
-
-func (ec *executionContext) _Member(ctx context.Context, sel ast.SelectionSet, obj *models.Member) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, memberImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Member")
-		case "id":
-			out.Values[i] = ec._Member_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._Member_name(ctx, field, obj)
-		case "websiteURL":
-			out.Values[i] = ec._Member_websiteURL(ctx, field, obj)
-		case "logoURL":
-			out.Values[i] = ec._Member_logoURL(ctx, field, obj)
-		case "countries":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Member_countries(ctx, field, obj)
-				return res
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var organizerImplementors = []string{"Organizer"}
-
-func (ec *executionContext) _Organizer(ctx context.Context, sel ast.SelectionSet, obj *models.Organizer) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, organizerImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Organizer")
-		case "id":
-			out.Values[i] = ec._Organizer_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._Organizer_name(ctx, field, obj)
-		case "title":
-			out.Values[i] = ec._Organizer_title(ctx, field, obj)
-		case "email":
-			out.Values[i] = ec._Organizer_email(ctx, field, obj)
-		case "company":
-			out.Values[i] = ec._Organizer_company(ctx, field, obj)
-		case "countries":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organizer_countries(ctx, field, obj)
-				return res
-			})
-		case "github":
-			out.Values[i] = ec._Organizer_github(ctx, field, obj)
-		case "twitter":
-			out.Values[i] = ec._Organizer_twitter(ctx, field, obj)
-		case "speakersBureau":
-			out.Values[i] = ec._Organizer_speakersBureau(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5495,7 +4502,7 @@ func (ec *executionContext) _Presentation(ctx context.Context, sel ast.Selection
 		case "id":
 			out.Values[i] = ec._Presentation_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "duration":
 			out.Values[i] = ec._Presentation_duration(ctx, field, obj)
@@ -5504,7 +4511,16 @@ func (ec *executionContext) _Presentation(ctx context.Context, sel ast.Selection
 		case "slides":
 			out.Values[i] = ec._Presentation_slides(ctx, field, obj)
 		case "speakers":
-			out.Values[i] = ec._Presentation_speakers(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Presentation_speakers(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5554,34 +4570,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_meetupGroup(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "organizers":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_organizers(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "organizer":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_organizer(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5638,90 +4626,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_meetup(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "sponsors":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_sponsors(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "sponsor":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_sponsor(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "members":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_members(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "member":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_member(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "meetupSponsors":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_meetupSponsors(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "meetupSponsor":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_meetupSponsor(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5835,7 +4739,20 @@ func (ec *executionContext) _Speaker(ctx context.Context, sel ast.SelectionSet, 
 		case "email":
 			out.Values[i] = ec._Speaker_email(ctx, field, obj)
 		case "company":
-			out.Values[i] = ec._Speaker_company(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Speaker_company(ctx, field, obj)
+				return res
+			})
+		case "github":
+			out.Values[i] = ec._Speaker_github(ctx, field, obj)
+		case "speakersBureau":
+			out.Values[i] = ec._Speaker_speakersBureau(ctx, field, obj)
 		case "countries":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5845,12 +4762,11 @@ func (ec *executionContext) _Speaker(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Speaker_countries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
-		case "github":
-			out.Values[i] = ec._Speaker_github(ctx, field, obj)
-		case "speakersBureau":
-			out.Values[i] = ec._Speaker_speakersBureau(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5873,18 +4789,12 @@ func (ec *executionContext) _Sponsor(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Sponsor")
-		case "id":
-			out.Values[i] = ec._Sponsor_id(ctx, field, obj)
+		case "role":
+			out.Values[i] = ec._Sponsor_role(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "name":
-			out.Values[i] = ec._Sponsor_name(ctx, field, obj)
-		case "websiteURL":
-			out.Values[i] = ec._Sponsor_websiteURL(ctx, field, obj)
-		case "logoURL":
-			out.Values[i] = ec._Sponsor_logoURL(ctx, field, obj)
-		case "countries":
+		case "company":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -5892,7 +4802,70 @@ func (ec *executionContext) _Sponsor(ctx context.Context, sel ast.SelectionSet, 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Sponsor_countries(ctx, field, obj)
+				res = ec._Sponsor_company(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var sponsorTierImplementors = []string{"SponsorTier"}
+
+func (ec *executionContext) _SponsorTier(ctx context.Context, sel ast.SelectionSet, obj *models.SponsorTier) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, sponsorTierImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SponsorTier")
+		case "id":
+			out.Values[i] = ec._SponsorTier_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "tier":
+			out.Values[i] = ec._SponsorTier_tier(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "company":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SponsorTier_company(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "meetupGroups":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SponsorTier_meetupGroups(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		default:
@@ -6332,159 +5305,6 @@ func (ec *executionContext) marshalNMeetupGroup2ᚖgithubᚗcomᚋcloudᚑnative
 	return ec._MeetupGroup(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMeetupSponsor2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx context.Context, sel ast.SelectionSet, v models.MeetupSponsor) graphql.Marshaler {
-	return ec._MeetupSponsor(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMeetupSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx context.Context, sel ast.SelectionSet, v []*models.MeetupSponsor) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMeetupSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNMeetupSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx context.Context, sel ast.SelectionSet, v *models.MeetupSponsor) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._MeetupSponsor(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNMember2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMember(ctx context.Context, sel ast.SelectionSet, v models.Member) graphql.Marshaler {
-	return ec._Member(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMember2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMember(ctx context.Context, sel ast.SelectionSet, v []*models.Member) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMember2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMember(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNMember2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMember(ctx context.Context, sel ast.SelectionSet, v *models.Member) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Member(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNOrganizer2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx context.Context, sel ast.SelectionSet, v models.Organizer) graphql.Marshaler {
-	return ec._Organizer(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNOrganizer2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx context.Context, sel ast.SelectionSet, v []*models.Organizer) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNOrganizer2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNOrganizer2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐOrganizer(ctx context.Context, sel ast.SelectionSet, v *models.Organizer) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Organizer(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNPresentation2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐPresentation(ctx context.Context, sel ast.SelectionSet, v models.Presentation) graphql.Marshaler {
 	return ec._Presentation(ctx, sel, &v)
 }
@@ -6587,10 +5407,6 @@ func (ec *executionContext) marshalNSpeaker2ᚖgithubᚗcomᚋcloudᚑnativeᚑn
 	return ec._Speaker(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSponsor2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v models.Sponsor) graphql.Marshaler {
-	return ec._Sponsor(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v []*models.Sponsor) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -6615,7 +5431,7 @@ func (ec *executionContext) marshalNSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnative�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, sel, v[i])
+			ret[i] = ec.marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6628,14 +5444,55 @@ func (ec *executionContext) marshalNSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnative�
 	return ret
 }
 
-func (ec *executionContext) marshalNSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v *models.Sponsor) graphql.Marshaler {
+func (ec *executionContext) marshalNSponsorTier2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx context.Context, sel ast.SelectionSet, v models.SponsorTier) graphql.Marshaler {
+	return ec._SponsorTier(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx context.Context, sel ast.SelectionSet, v []*models.SponsorTier) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSponsorTier2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNSponsorTier2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx context.Context, sel ast.SelectionSet, v *models.SponsorTier) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._Sponsor(ctx, sel, v)
+	return ec._SponsorTier(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -6650,6 +5507,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -6912,57 +5798,6 @@ func (ec *executionContext) marshalOCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑn
 	return ec._Company(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOCountry2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx context.Context, sel ast.SelectionSet, v models.Country) graphql.Marshaler {
-	return ec._Country(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOCountry2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx context.Context, sel ast.SelectionSet, v []*models.Country) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOCountry2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCountry(ctx context.Context, sel ast.SelectionSet, v *models.Country) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Country(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	return graphql.UnmarshalFloat(v)
 }
@@ -6977,17 +5812,6 @@ func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	return graphql.MarshalInt(v)
-}
-
-func (ec *executionContext) marshalOMeetupSponsor2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx context.Context, sel ast.SelectionSet, v models.MeetupSponsor) graphql.Marshaler {
-	return ec._MeetupSponsor(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOMeetupSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupSponsor(ctx context.Context, sel ast.SelectionSet, v *models.MeetupSponsor) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._MeetupSponsor(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPresentation2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐPresentation(ctx context.Context, sel ast.SelectionSet, v models.Presentation) graphql.Marshaler {
@@ -7094,46 +5918,6 @@ func (ec *executionContext) marshalOSpeaker2ᚖgithubᚗcomᚋcloudᚑnativeᚑn
 
 func (ec *executionContext) marshalOSponsor2githubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v models.Sponsor) graphql.Marshaler {
 	return ec._Sponsor(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOSponsor2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v []*models.Sponsor) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		rctx := &graphql.ResolverContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalOSponsor2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsor(ctx context.Context, sel ast.SelectionSet, v *models.Sponsor) graphql.Marshaler {
