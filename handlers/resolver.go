@@ -137,6 +137,17 @@ func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([
 	return countries, nil
 }
 
+func (r *companyResolver) SponsorTiers(ctx context.Context, obj *models.Company) ([]*models.SponsorTier, error) {
+	sponsorTiers, err := r.statsRepository.GetSponsorTiersForCompany(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return sponsorTiers, nil
+}
+
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) MeetupGroups(ctx context.Context) ([]*models.MeetupGroup, error) {
@@ -293,4 +304,15 @@ func (r *sponsorTierResolver) Company(ctx context.Context, obj *models.SponsorTi
 	}
 
 	return company, nil
+}
+
+func (r *sponsorTierResolver) MeetupGroups(ctx context.Context, obj *models.SponsorTier) ([]*models.MeetupGroup, error) {
+	meetupGroups, err := r.statsRepository.GetMeetupGroupsForSponsorTier(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetupGroups, nil
 }

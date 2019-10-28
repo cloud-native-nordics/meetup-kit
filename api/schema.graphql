@@ -36,6 +36,7 @@ type Company {
     websiteURL: String
     logoURL: String
     countries: [String]!
+    sponsorTiers: [SponsorTier!]!
 }
 
 type Meetup {
@@ -59,6 +60,7 @@ type SponsorTier {
     id: String!
     tier: String!
     company: Company!
+    meetupGroups: [MeetupGroup!]!
 }
 
 type Presentation {

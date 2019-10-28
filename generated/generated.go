@@ -50,11 +50,12 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Company struct {
-		Countries  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		LogoURL    func(childComplexity int) int
-		Name       func(childComplexity int) int
-		WebsiteURL func(childComplexity int) int
+		Countries    func(childComplexity int) int
+		ID           func(childComplexity int) int
+		LogoURL      func(childComplexity int) int
+		Name         func(childComplexity int) int
+		SponsorTiers func(childComplexity int) int
+		WebsiteURL   func(childComplexity int) int
 	}
 
 	Meetup struct {
@@ -124,14 +125,16 @@ type ComplexityRoot struct {
 	}
 
 	SponsorTier struct {
-		Company func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Tier    func(childComplexity int) int
+		Company      func(childComplexity int) int
+		ID           func(childComplexity int) int
+		MeetupGroups func(childComplexity int) int
+		Tier         func(childComplexity int) int
 	}
 }
 
 type CompanyResolver interface {
 	Countries(ctx context.Context, obj *models.Company) ([]*string, error)
+	SponsorTiers(ctx context.Context, obj *models.Company) ([]*models.SponsorTier, error)
 }
 type MeetupResolver interface {
 	Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error)
@@ -171,6 +174,7 @@ type SponsorResolver interface {
 }
 type SponsorTierResolver interface {
 	Company(ctx context.Context, obj *models.SponsorTier) (*models.Company, error)
+	MeetupGroups(ctx context.Context, obj *models.SponsorTier) ([]*models.MeetupGroup, error)
 }
 
 type executableSchema struct {
@@ -215,6 +219,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Company.Name(childComplexity), true
+
+	case "Company.sponsorTiers":
+		if e.complexity.Company.SponsorTiers == nil {
+			break
+		}
+
+		return e.complexity.Company.SponsorTiers(childComplexity), true
 
 	case "Company.websiteURL":
 		if e.complexity.Company.WebsiteURL == nil {
@@ -603,6 +614,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SponsorTier.ID(childComplexity), true
 
+	case "SponsorTier.meetupGroups":
+		if e.complexity.SponsorTier.MeetupGroups == nil {
+			break
+		}
+
+		return e.complexity.SponsorTier.MeetupGroups(childComplexity), true
+
 	case "SponsorTier.tier":
 		if e.complexity.SponsorTier.Tier == nil {
 			break
@@ -697,6 +715,7 @@ type Company {
     websiteURL: String
     logoURL: String
     countries: [String]!
+    sponsorTiers: [SponsorTier!]!
 }
 
 type Meetup {
@@ -720,6 +739,7 @@ type SponsorTier {
     id: String!
     tier: String!
     company: Company!
+    meetupGroups: [MeetupGroup!]!
 }
 
 type Presentation {
@@ -1062,6 +1082,43 @@ func (ec *executionContext) _Company_countries(ctx context.Context, field graphq
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Company_sponsorTiers(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Company",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Company().SponsorTiers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.SponsorTier)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_id(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -3002,6 +3059,43 @@ func (ec *executionContext) _SponsorTier_company(ctx context.Context, field grap
 	return ec.marshalNCompany2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐCompany(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _SponsorTier_meetupGroups(ctx context.Context, field graphql.CollectedField, obj *models.SponsorTier) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "SponsorTier",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.SponsorTier().MeetupGroups(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.MeetupGroup)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNMeetupGroup2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupGroup(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4197,6 +4291,20 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 				}
 				return res
 			})
+		case "sponsorTiers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Company_sponsorTiers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4741,6 +4849,20 @@ func (ec *executionContext) _SponsorTier(ctx context.Context, sel ast.SelectionS
 					}
 				}()
 				res = ec._SponsorTier_company(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "meetupGroups":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SponsorTier_meetupGroups(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

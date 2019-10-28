@@ -78,6 +78,32 @@ func (sr *StatsRepository) GetSponsorTiersForMeetupGroup(id string) ([]*models.S
 	return output, nil
 }
 
+func (sr *StatsRepository) GetMeetupGroupsForSponsorTier(id string) ([]*models.MeetupGroup, error) {
+	output := []*models.MeetupGroup{}
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	// List all sponsor tier relations for meetup group
+	relations, err := txn.Get("sponsorTierToMeetupGroup", "sponsorTierID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for obj := relations.Next(); obj != nil; obj = relations.Next() {
+		relation := obj.(models.SponsorTierToMeetupGroup)
+		it, err := txn.Get("meetupGroup", "id", relation.MeetupGroupID)
+		if err != nil {
+			return nil, err
+		}
+		for obj := it.Next(); obj != nil; obj = it.Next() {
+			meetupGroup := obj.(models.MeetupGroup)
+			output = append(output, &meetupGroup)
+		}
+	}
+	return output, nil
+}
+
 func (sr *StatsRepository) GetOrganizersForMeetupGroup(id string) ([]*models.Speaker, error) {
 	output := []*models.Speaker{}
 	// Create read-only transaction
@@ -239,6 +265,32 @@ func (sr *StatsRepository) GetCountriesForCompany(id string) ([]*string, error) 
 				output = append(output, &meetGrp.Country)
 			}
 		}
+	}
+
+	return output, nil
+}
+
+func (sr *StatsRepository) GetSponsorTiersForCompany(id string) ([]*models.SponsorTier, error) {
+	output := []*models.SponsorTier{}
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	sponsorTierRelations, err := txn.Get("sponsorTierToCompany", "companyID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for sponTierRelObj := sponsorTierRelations.Next(); sponTierRelObj != nil; sponTierRelObj = sponsorTierRelations.Next() {
+		sponTierRel := sponTierRelObj.(models.SponsorTierToCompany)
+
+		it, err := txn.First("sponsorTier", "id", sponTierRel.SponsorTierID)
+		if err != nil {
+			return nil, err
+		}
+		result := it.(models.SponsorTier)
+
+		output = append(output, &result)
 	}
 
 	return output, nil
