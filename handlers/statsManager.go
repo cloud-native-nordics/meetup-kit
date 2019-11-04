@@ -153,6 +153,7 @@ func (sm *StatsManager) generateCompanies(output *unmarshalledData, companies []
 			Name:       company.Name,
 			WebsiteURL: company.WebsiteURL,
 			LogoURL:    company.LogoURL,
+			WhiteLogo:  company.WhiteLogo,
 		}
 		output.companies = append(output.companies, *newCompany)
 	}

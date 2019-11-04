@@ -38,6 +38,7 @@ type Company {
     logoURL: String
     countries: [String]!
     sponsorTiers: [SponsorTier!]!
+    whiteLogo: Boolean
 }
 
 type Meetup {
@@ -75,10 +76,10 @@ type Presentation {
 type Query {
     meetupGroups: [MeetupGroup!]!
     meetupGroup(meetupID: String!): MeetupGroup!
-        
+
     companies: [Company!]!
     company(id: String!): Company!
-        
+
     meetups: [Meetup!]!
     meetup(id: Int!): Meetup!
 
