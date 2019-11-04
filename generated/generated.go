@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 		Name         func(childComplexity int) int
 		SponsorTiers func(childComplexity int) int
 		WebsiteURL   func(childComplexity int) int
+		WhiteLogo    func(childComplexity int) int
 	}
 
 	Meetup struct {
@@ -235,6 +236,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Company.WebsiteURL(childComplexity), true
+
+	case "Company.whiteLogo":
+		if e.complexity.Company.WhiteLogo == nil {
+			break
+		}
+
+		return e.complexity.Company.WhiteLogo(childComplexity), true
 
 	case "Meetup.address":
 		if e.complexity.Meetup.Address == nil {
@@ -726,6 +734,7 @@ type Company {
     logoURL: String
     countries: [String]!
     sponsorTiers: [SponsorTier!]!
+    whiteLogo: Boolean
 }
 
 type Meetup {
@@ -763,10 +772,10 @@ type Presentation {
 type Query {
     meetupGroups: [MeetupGroup!]!
     meetupGroup(meetupID: String!): MeetupGroup!
-        
+
     companies: [Company!]!
     company(id: String!): Company!
-        
+
     meetups: [Meetup!]!
     meetup(id: Int!): Meetup!
 
@@ -1129,6 +1138,40 @@ func (ec *executionContext) _Company_sponsorTiers(ctx context.Context, field gra
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Company_whiteLogo(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Company",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WhiteLogo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Meetup_id(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
@@ -4352,6 +4395,8 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 				}
 				return res
 			})
+		case "whiteLogo":
+			out.Values[i] = ec._Company_whiteLogo(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

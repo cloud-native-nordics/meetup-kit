@@ -5,6 +5,7 @@ type CompanyIn struct {
 	Name       string `json:"name"`
 	WebsiteURL string `json:"websiteURL"`
 	LogoURL    string `json:"logoURL"`
+	WhiteLogo  bool   `json:"whiteLogo"`
 }
 
 type SpeakerIn struct {
@@ -85,6 +86,7 @@ type Company struct {
 	Name       string
 	WebsiteURL string
 	LogoURL    string
+	WhiteLogo  bool
 }
 
 type Sponsor struct {
