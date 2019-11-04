@@ -66,6 +66,7 @@ type ComplexityRoot struct {
 		Duration      func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
+		Photo         func(childComplexity int) int
 		Presentations func(childComplexity int) int
 		Recording     func(childComplexity int) int
 		Sponsors      func(childComplexity int) int
@@ -285,6 +286,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meetup.Name(childComplexity), true
+
+	case "Meetup.photo":
+		if e.complexity.Meetup.Photo == nil {
+			break
+		}
+
+		return e.complexity.Meetup.Photo(childComplexity), true
 
 	case "Meetup.presentations":
 		if e.complexity.Meetup.Presentations == nil {
@@ -744,6 +752,7 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
+    photo: String
     recording: String
     sponsors: [Sponsor]!
     presentations: [Presentation]
@@ -1367,6 +1376,40 @@ func (ec *executionContext) _Meetup_address(ctx context.Context, field graphql.C
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Address, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Meetup_photo(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Meetup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Photo, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4434,6 +4477,8 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Meetup_attendees(ctx, field, obj)
 		case "address":
 			out.Values[i] = ec._Meetup_address(ctx, field, obj)
+		case "photo":
+			out.Values[i] = ec._Meetup_photo(ctx, field, obj)
 		case "recording":
 			out.Values[i] = ec._Meetup_recording(ctx, field, obj)
 		case "sponsors":

@@ -48,6 +48,7 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
+    photo: String
     recording: String
     sponsors: [Sponsor]!
     presentations: [Presentation]

@@ -250,6 +250,7 @@ func (sm *StatsManager) generateMeetups(output *unmarshalledData, meetups map[st
 			Name:      meetup.Name,
 			Date:      meetup.Date,
 			Duration:  meetup.Duration,
+			Photo:     meetup.Photo,
 			Attendees: meetup.Attendees,
 			Address:   meetup.Address,
 			Recording: meetup.Recording,

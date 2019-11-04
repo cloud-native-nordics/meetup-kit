@@ -42,6 +42,7 @@ type MeetupIn struct {
 	Duration      string            `json:"duration"`
 	Attendees     int               `json:"attendees"`
 	Address       string            `json:"address"`
+	Photo         string            `json:"photo"`
 	Recording     string            `json:"recording"`
 	Sponsors      []*SponsorIn      `json:"sponsors"`
 	Presentations []*PresentationIn `json:"presentations"`
@@ -78,6 +79,7 @@ type Meetup struct {
 	Duration  string
 	Attendees int
 	Address   string
+	Photo     string
 	Recording string
 }
 
