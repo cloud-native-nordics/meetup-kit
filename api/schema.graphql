@@ -8,6 +8,7 @@ type MeetupGroup {
     city: String!
     country: String!
     description: String!
+    memberCount: Int!
     sponsorTiers: [SponsorTier!]!
     meetupID: String!
     organizers: [Speaker!]!
