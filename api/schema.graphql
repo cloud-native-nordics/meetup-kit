@@ -8,6 +8,7 @@ type MeetupGroup {
     city: String!
     country: String!
     description: String!
+    memberCount: Int!
     sponsorTiers: [SponsorTier!]!
     meetupID: String!
     organizers: [Speaker!]!
@@ -37,6 +38,7 @@ type Company {
     logoURL: String
     countries: [String]!
     sponsorTiers: [SponsorTier!]!
+    whiteLogo: Boolean
 }
 
 type Meetup {
@@ -46,6 +48,7 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
+    photo: String
     recording: String
     sponsors: [Sponsor]!
     presentations: [Presentation]
@@ -75,10 +78,10 @@ type Presentation {
 type Query {
     meetupGroups: [MeetupGroup!]!
     meetupGroup(meetupID: String!): MeetupGroup!
-        
+
     companies: [Company!]!
     company(id: String!): Company!
-        
+
     meetups: [Meetup!]!
     meetup(id: Int!): Meetup!
 

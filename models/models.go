@@ -5,6 +5,7 @@ type CompanyIn struct {
 	Name       string `json:"name"`
 	WebsiteURL string `json:"websiteURL"`
 	LogoURL    string `json:"logoURL"`
+	WhiteLogo  bool   `json:"whiteLogo"`
 }
 
 type SpeakerIn struct {
@@ -41,6 +42,7 @@ type MeetupIn struct {
 	Duration      string            `json:"duration"`
 	Attendees     int               `json:"attendees"`
 	Address       string            `json:"address"`
+	Photo         string            `json:"photo"`
 	Recording     string            `json:"recording"`
 	Sponsors      []*SponsorIn      `json:"sponsors"`
 	Presentations []*PresentationIn `json:"presentations"`
@@ -77,6 +79,7 @@ type Meetup struct {
 	Duration  string
 	Attendees int
 	Address   string
+	Photo     string
 	Recording string
 }
 
@@ -85,6 +88,7 @@ type Company struct {
 	Name       string
 	WebsiteURL string
 	LogoURL    string
+	WhiteLogo  bool
 }
 
 type Sponsor struct {

@@ -110,6 +110,7 @@ func (r *meetupGroupResolver) EcosystemMembers(ctx context.Context, obj *models.
 
 	return companies, nil
 }
+
 func (r *meetupGroupResolver) Meetups(ctx context.Context, obj *models.MeetupGroup) ([]*models.Meetup, error) {
 	meetups, err := r.statsRepository.GetMeetupsForMeetupGroup(obj.MeetupID)
 
@@ -119,6 +120,17 @@ func (r *meetupGroupResolver) Meetups(ctx context.Context, obj *models.MeetupGro
 	}
 
 	return meetups, nil
+}
+
+func (r *meetupGroupResolver) MemberCount(ctx context.Context, obj *models.MeetupGroup) (int, error) {
+	count, err := repositories.GetMeetupInfoFromAPI(*obj)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return 0, err
+	}
+
+	return count.Members, nil
 }
 
 type presentationResolver struct{ *Resolver }

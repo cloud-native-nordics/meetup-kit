@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 		Name         func(childComplexity int) int
 		SponsorTiers func(childComplexity int) int
 		WebsiteURL   func(childComplexity int) int
+		WhiteLogo    func(childComplexity int) int
 	}
 
 	Meetup struct {
@@ -66,6 +67,7 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		MeetupGroup   func(childComplexity int) int
 		Name          func(childComplexity int) int
+		Photo         func(childComplexity int) int
 		Presentations func(childComplexity int) int
 		Recording     func(childComplexity int) int
 		Sponsors      func(childComplexity int) int
@@ -81,6 +83,7 @@ type ComplexityRoot struct {
 		Longitude        func(childComplexity int) int
 		MeetupID         func(childComplexity int) int
 		Meetups          func(childComplexity int) int
+		MemberCount      func(childComplexity int) int
 		Name             func(childComplexity int) int
 		Organizers       func(childComplexity int) int
 		Photo            func(childComplexity int) int
@@ -143,6 +146,7 @@ type MeetupResolver interface {
 	MeetupGroup(ctx context.Context, obj *models.Meetup) (*models.MeetupGroup, error)
 }
 type MeetupGroupResolver interface {
+	MemberCount(ctx context.Context, obj *models.MeetupGroup) (int, error)
 	SponsorTiers(ctx context.Context, obj *models.MeetupGroup) ([]*models.SponsorTier, error)
 
 	Organizers(ctx context.Context, obj *models.MeetupGroup) ([]*models.Speaker, error)
@@ -236,6 +240,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Company.WebsiteURL(childComplexity), true
 
+	case "Company.whiteLogo":
+		if e.complexity.Company.WhiteLogo == nil {
+			break
+		}
+
+		return e.complexity.Company.WhiteLogo(childComplexity), true
+
 	case "Meetup.address":
 		if e.complexity.Meetup.Address == nil {
 			break
@@ -284,6 +295,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meetup.Name(childComplexity), true
+
+	case "Meetup.photo":
+		if e.complexity.Meetup.Photo == nil {
+			break
+		}
+
+		return e.complexity.Meetup.Photo(childComplexity), true
 
 	case "Meetup.presentations":
 		if e.complexity.Meetup.Presentations == nil {
@@ -368,6 +386,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MeetupGroup.Meetups(childComplexity), true
+
+	case "MeetupGroup.memberCount":
+		if e.complexity.MeetupGroup.MemberCount == nil {
+			break
+		}
+
+		return e.complexity.MeetupGroup.MemberCount(childComplexity), true
 
 	case "MeetupGroup.name":
 		if e.complexity.MeetupGroup.Name == nil {
@@ -696,6 +721,7 @@ type MeetupGroup {
     city: String!
     country: String!
     description: String!
+    memberCount: Int!
     sponsorTiers: [SponsorTier!]!
     meetupID: String!
     organizers: [Speaker!]!
@@ -725,6 +751,7 @@ type Company {
     logoURL: String
     countries: [String]!
     sponsorTiers: [SponsorTier!]!
+    whiteLogo: Boolean
 }
 
 type Meetup {
@@ -734,6 +761,7 @@ type Meetup {
     duration: String
     attendees: Int
     address: String
+    photo: String
     recording: String
     sponsors: [Sponsor]!
     presentations: [Presentation]
@@ -763,10 +791,10 @@ type Presentation {
 type Query {
     meetupGroups: [MeetupGroup!]!
     meetupGroup(meetupID: String!): MeetupGroup!
-        
+
     companies: [Company!]!
     company(id: String!): Company!
-        
+
     meetups: [Meetup!]!
     meetup(id: Int!): Meetup!
 
@@ -1131,6 +1159,40 @@ func (ec *executionContext) _Company_sponsorTiers(ctx context.Context, field gra
 	return ec.marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Company_whiteLogo(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Company",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WhiteLogo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Meetup_id(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -1324,6 +1386,40 @@ func (ec *executionContext) _Meetup_address(ctx context.Context, field graphql.C
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Address, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Meetup_photo(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Meetup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Photo, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1657,6 +1753,43 @@ func (ec *executionContext) _MeetupGroup_description(ctx context.Context, field 
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MeetupGroup_memberCount(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "MeetupGroup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MeetupGroup().MemberCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MeetupGroup_sponsorTiers(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
@@ -4352,6 +4485,8 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 				}
 				return res
 			})
+		case "whiteLogo":
+			out.Values[i] = ec._Company_whiteLogo(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4389,6 +4524,8 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Meetup_attendees(ctx, field, obj)
 		case "address":
 			out.Values[i] = ec._Meetup_address(ctx, field, obj)
+		case "photo":
+			out.Values[i] = ec._Meetup_photo(ctx, field, obj)
 		case "recording":
 			out.Values[i] = ec._Meetup_recording(ctx, field, obj)
 		case "sponsors":
@@ -4471,6 +4608,20 @@ func (ec *executionContext) _MeetupGroup(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "memberCount":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MeetupGroup_memberCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "sponsorTiers":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
