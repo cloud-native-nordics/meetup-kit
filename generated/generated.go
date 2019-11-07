@@ -64,6 +64,7 @@ type ComplexityRoot struct {
 		Date          func(childComplexity int) int
 		Duration      func(childComplexity int) int
 		ID            func(childComplexity int) int
+		MeetupGroup   func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Presentations func(childComplexity int) int
 		Recording     func(childComplexity int) int
@@ -139,6 +140,7 @@ type CompanyResolver interface {
 type MeetupResolver interface {
 	Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error)
 	Presentations(ctx context.Context, obj *models.Meetup) ([]*models.Presentation, error)
+	MeetupGroup(ctx context.Context, obj *models.Meetup) (*models.MeetupGroup, error)
 }
 type MeetupGroupResolver interface {
 	SponsorTiers(ctx context.Context, obj *models.MeetupGroup) ([]*models.SponsorTier, error)
@@ -268,6 +270,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meetup.ID(childComplexity), true
+
+	case "Meetup.meetupGroup":
+		if e.complexity.Meetup.MeetupGroup == nil {
+			break
+		}
+
+		return e.complexity.Meetup.MeetupGroup(childComplexity), true
 
 	case "Meetup.name":
 		if e.complexity.Meetup.Name == nil {
@@ -728,6 +737,7 @@ type Meetup {
     recording: String
     sponsors: [Sponsor]!
     presentations: [Presentation]
+    meetupGroup: MeetupGroup!
 }
 
 type Sponsor {
@@ -1431,6 +1441,43 @@ func (ec *executionContext) _Meetup_presentations(ctx context.Context, field gra
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOPresentation2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐPresentation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Meetup_meetupGroup(ctx context.Context, field graphql.CollectedField, obj *models.Meetup) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Meetup",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meetup().MeetupGroup(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.MeetupGroup)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNMeetupGroup2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetupGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MeetupGroup_photo(ctx context.Context, field graphql.CollectedField, obj *models.MeetupGroup) (ret graphql.Marshaler) {
@@ -4367,6 +4414,20 @@ func (ec *executionContext) _Meetup(ctx context.Context, sel ast.SelectionSet, o
 					}
 				}()
 				res = ec._Meetup_presentations(ctx, field, obj)
+				return res
+			})
+		case "meetupGroup":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meetup_meetupGroup(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		default:

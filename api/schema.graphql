@@ -49,6 +49,7 @@ type Meetup {
     recording: String
     sponsors: [Sponsor]!
     presentations: [Presentation]
+    meetupGroup: MeetupGroup!
 }
 
 type Sponsor {

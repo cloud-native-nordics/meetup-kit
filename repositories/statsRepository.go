@@ -53,6 +53,27 @@ func (sr *StatsRepository) GetMeetupGroup(id string) (*models.MeetupGroup, error
 	return &out, nil
 }
 
+func (sr *StatsRepository) GetMeetupGroupForMeetup(id int) (*models.MeetupGroup, error) {
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	//Get meetup group by id
+	relations, err := txn.First("meetupGroupToMeetup", "meetupID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	relation := relations.(models.MeetupGroupToMeetup)
+	it, err := txn.First("meetupGroup", "id", relation.MeetupGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	out := it.(models.MeetupGroup)
+	return &out, nil
+}
+
 func (sr *StatsRepository) GetSponsorTiersForMeetupGroup(id string) ([]*models.SponsorTier, error) {
 	output := []*models.SponsorTier{}
 	// Create read-only transaction

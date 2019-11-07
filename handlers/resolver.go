@@ -67,6 +67,16 @@ func (r *meetupResolver) Presentations(ctx context.Context, obj *models.Meetup) 
 
 	return presentations, nil
 }
+func (r *meetupResolver) MeetupGroup(ctx context.Context, obj *models.Meetup) (*models.MeetupGroup, error) {
+	meetupGroup, err := r.statsRepository.GetMeetupGroupForMeetup(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetupGroup, nil
+}
 
 type meetupGroupResolver struct{ *Resolver }
 
