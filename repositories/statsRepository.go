@@ -323,7 +323,7 @@ func (sr *StatsRepository) GetSpeakersForCompany(id string) ([]*models.Speaker, 
 	txn := sr.db.Txn(false)
 	defer txn.Abort()
 
-	speakerRelations, err := txn.Get("SpeakerToCompany", "companyID", id)
+	speakerRelations, err := txn.Get("speakerToCompany", "companyID", id)
 	if err != nil {
 		return nil, err
 	}
