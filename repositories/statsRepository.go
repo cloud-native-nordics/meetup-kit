@@ -317,6 +317,32 @@ func (sr *StatsRepository) GetSponsorTiersForCompany(id string) ([]*models.Spons
 	return output, nil
 }
 
+func (sr *StatsRepository) GetSpeakersForCompany(id string) ([]*models.Speaker, error) {
+	output := []*models.Speaker{}
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	speakerRelations, err := txn.Get("SpeakerToCompany", "companyID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for speakTierRelObj := speakerRelations.Next(); speakTierRelObj != nil; speakTierRelObj = speakerRelations.Next() {
+		speakRel := speakTierRelObj.(models.SpeakerToCompany)
+
+		it, err := txn.First("speaker", "id", speakRel.SpeakerID)
+		if err != nil {
+			return nil, err
+		}
+		result := it.(models.Speaker)
+
+		output = append(output, &result)
+	}
+
+	return output, nil
+}
+
 // ### Meetups ###
 func (sr *StatsRepository) GetAllMeetups() ([]*models.Meetup, error) {
 	output := []*models.Meetup{}

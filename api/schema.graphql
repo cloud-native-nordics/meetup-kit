@@ -38,6 +38,7 @@ type Company {
     logoURL: String
     countries: [String]!
     sponsorTiers: [SponsorTier!]!
+    speakers: [Speaker!]!
     whiteLogo: Boolean
 }
 

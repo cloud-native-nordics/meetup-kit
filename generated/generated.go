@@ -54,6 +54,7 @@ type ComplexityRoot struct {
 		ID           func(childComplexity int) int
 		LogoURL      func(childComplexity int) int
 		Name         func(childComplexity int) int
+		Speakers     func(childComplexity int) int
 		SponsorTiers func(childComplexity int) int
 		WebsiteURL   func(childComplexity int) int
 		WhiteLogo    func(childComplexity int) int
@@ -139,6 +140,7 @@ type ComplexityRoot struct {
 type CompanyResolver interface {
 	Countries(ctx context.Context, obj *models.Company) ([]*string, error)
 	SponsorTiers(ctx context.Context, obj *models.Company) ([]*models.SponsorTier, error)
+	Speakers(ctx context.Context, obj *models.Company) ([]*models.Speaker, error)
 }
 type MeetupResolver interface {
 	Sponsors(ctx context.Context, obj *models.Meetup) ([]*models.Sponsor, error)
@@ -225,6 +227,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Company.Name(childComplexity), true
+
+	case "Company.speakers":
+		if e.complexity.Company.Speakers == nil {
+			break
+		}
+
+		return e.complexity.Company.Speakers(childComplexity), true
 
 	case "Company.sponsorTiers":
 		if e.complexity.Company.SponsorTiers == nil {
@@ -751,6 +760,7 @@ type Company {
     logoURL: String
     countries: [String]!
     sponsorTiers: [SponsorTier!]!
+    speakers: [Speaker!]!
     whiteLogo: Boolean
 }
 
@@ -1157,6 +1167,43 @@ func (ec *executionContext) _Company_sponsorTiers(ctx context.Context, field gra
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNSponsorTier2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSponsorTier(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Company_speakers(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Company",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Company().Speakers(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Speaker)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSpeaker2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSpeaker(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Company_whiteLogo(ctx context.Context, field graphql.CollectedField, obj *models.Company) (ret graphql.Marshaler) {
@@ -4480,6 +4527,20 @@ func (ec *executionContext) _Company(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Company_sponsorTiers(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "speakers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Company_speakers(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

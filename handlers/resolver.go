@@ -170,6 +170,17 @@ func (r *companyResolver) SponsorTiers(ctx context.Context, obj *models.Company)
 	return sponsorTiers, nil
 }
 
+func (r *companyResolver) Speakers(ctx context.Context, obj *models.Company) ([]*models.Speaker, error) {
+	speakers, err := r.statsRepository.GetSpeakersForCompany(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return speakers, nil
+}
+
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) MeetupGroups(ctx context.Context) ([]*models.MeetupGroup, error) {
