@@ -487,6 +487,26 @@ func (sr *StatsRepository) GetSpeakersForPresentation(id string) ([]*models.Spea
 	return output, nil
 }
 
+func (sr *StatsRepository) GetMeetupForPresentation(id string) (*models.Meetup, error) {
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	relations, err := txn.First("meetupToPresentation", "presentationID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	relation := relations.(models.MeetupToPresentation)
+	it, err := txn.First("meetup", "id", relation.MeetupID)
+	if err != nil {
+		return nil, err
+	}
+	result := it.(models.Meetup)
+
+	return &result, nil
+}
+
 // ### Speakers ###
 func (sr *StatsRepository) GetAllSpeakers() ([]*models.Speaker, error) {
 	output := []*models.Speaker{}

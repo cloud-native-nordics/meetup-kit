@@ -75,6 +75,7 @@ type Presentation {
     title: String
     slides: String
     speakers: [Speaker]
+    meetup: Meetup!
 }
 
 type Query {

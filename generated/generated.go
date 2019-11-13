@@ -94,6 +94,7 @@ type ComplexityRoot struct {
 	Presentation struct {
 		Duration func(childComplexity int) int
 		ID       func(childComplexity int) int
+		Meetup   func(childComplexity int) int
 		Slides   func(childComplexity int) int
 		Speakers func(childComplexity int) int
 		Title    func(childComplexity int) int
@@ -159,6 +160,7 @@ type MeetupGroupResolver interface {
 }
 type PresentationResolver interface {
 	Speakers(ctx context.Context, obj *models.Presentation) ([]*models.Speaker, error)
+	Meetup(ctx context.Context, obj *models.Presentation) (*models.Meetup, error)
 }
 type QueryResolver interface {
 	MeetupGroups(ctx context.Context) ([]*models.MeetupGroup, error)
@@ -446,6 +448,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Presentation.ID(childComplexity), true
+
+	case "Presentation.meetup":
+		if e.complexity.Presentation.Meetup == nil {
+			break
+		}
+
+		return e.complexity.Presentation.Meetup(childComplexity), true
 
 	case "Presentation.slides":
 		if e.complexity.Presentation.Slides == nil {
@@ -806,6 +815,7 @@ type Presentation {
     title: String
     slides: String
     speakers: [Speaker]
+    meetup: Meetup!
 }
 
 type Query {
@@ -2307,6 +2317,43 @@ func (ec *executionContext) _Presentation_speakers(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOSpeaker2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐSpeaker(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Presentation_meetup(ctx context.Context, field graphql.CollectedField, obj *models.Presentation) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Presentation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Presentation().Meetup(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Meetup)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNMeetup2ᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐMeetup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_meetupGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4839,6 +4886,20 @@ func (ec *executionContext) _Presentation(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Presentation_speakers(ctx, field, obj)
+				return res
+			})
+		case "meetup":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Presentation_meetup(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		default:

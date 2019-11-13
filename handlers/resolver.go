@@ -146,6 +146,17 @@ func (r *presentationResolver) Speakers(ctx context.Context, obj *models.Present
 	return speakers, nil
 }
 
+func (r *presentationResolver) Meetup(ctx context.Context, obj *models.Presentation) (*models.Meetup, error) {
+	meetup, err := r.statsRepository.GetMeetupForPresentation(obj.ID)
+
+	if err != nil {
+		glog.V(1).Info(err)
+		return nil, err
+	}
+
+	return meetup, nil
+}
+
 type companyResolver struct{ *Resolver }
 
 func (r *companyResolver) Countries(ctx context.Context, obj *models.Company) ([]*string, error) {
