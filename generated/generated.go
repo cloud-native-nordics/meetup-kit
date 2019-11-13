@@ -120,6 +120,7 @@ type ComplexityRoot struct {
 		Github         func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Name           func(childComplexity int) int
+		Presentations  func(childComplexity int) int
 		SpeakersBureau func(childComplexity int) int
 		Title          func(childComplexity int) int
 	}
@@ -176,6 +177,7 @@ type SpeakerResolver interface {
 	Company(ctx context.Context, obj *models.Speaker) (*models.Company, error)
 
 	Countries(ctx context.Context, obj *models.Speaker) ([]*string, error)
+	Presentations(ctx context.Context, obj *models.Speaker) ([]*models.Presentation, error)
 }
 type SponsorResolver interface {
 	Company(ctx context.Context, obj *models.Sponsor) (*models.Company, error)
@@ -615,6 +617,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Speaker.Name(childComplexity), true
 
+	case "Speaker.presentations":
+		if e.complexity.Speaker.Presentations == nil {
+			break
+		}
+
+		return e.complexity.Speaker.Presentations(childComplexity), true
+
 	case "Speaker.speakersBureau":
 		if e.complexity.Speaker.SpeakersBureau == nil {
 			break
@@ -750,6 +759,7 @@ type Speaker {
     github: String
     speakersBureau: String
     countries: [String]!
+    presentations: [Presentation!]!
 }
 
 
@@ -3101,6 +3111,43 @@ func (ec *executionContext) _Speaker_countries(ctx context.Context, field graphq
 	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Speaker_presentations(ctx context.Context, field graphql.CollectedField, obj *models.Speaker) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Speaker",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Speaker().Presentations(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Presentation)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPresentation2ᚕᚖgithubᚗcomᚋcloudᚑnativeᚑnordicsᚋstatsᚑapiᚋmodelsᚐPresentation(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Sponsor_role(ctx context.Context, field graphql.CollectedField, obj *models.Sponsor) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5035,6 +5082,20 @@ func (ec *executionContext) _Speaker(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Speaker_countries(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "presentations":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Speaker_presentations(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

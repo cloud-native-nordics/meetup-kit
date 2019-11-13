@@ -591,6 +591,32 @@ func (sr *StatsRepository) GetCountriesForSpeaker(id string) ([]*string, error) 
 	return output, nil
 }
 
+func (sr *StatsRepository) GetPresentationsForSpeaker(id string) ([]*models.Presentation, error) {
+	var output []*models.Presentation
+	// Create read-only transaction
+	txn := sr.db.Txn(false)
+	defer txn.Abort()
+
+	presentationRelations, err := txn.Get("presentationToSpeaker", "speakerID", id)
+	if err != nil {
+		return nil, err
+	}
+
+	for presRelObj := presentationRelations.Next(); presRelObj != nil; presRelObj = presentationRelations.Next() {
+		presRel := presRelObj.(models.PresentationToSpeaker)
+
+		it, err := txn.First("presentation", "id", presRel.PresentationID)
+		if err != nil {
+			return nil, err
+		}
+
+		result := it.(models.Presentation)
+
+		output = append(output, &result)
+	}
+	return output, nil
+}
+
 // ### Sponsor ###
 func (sr *StatsRepository) GetCompanyForSponsor(id string) (*models.Company, error) {
 	// Create read-only transaction

@@ -28,6 +28,7 @@ type Speaker {
     github: String
     speakersBureau: String
     countries: [String]!
+    presentations: [Presentation!]!
 }
 
 
