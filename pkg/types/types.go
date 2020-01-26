@@ -1,4 +1,4 @@
-package main
+package types
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 var (
 	globalSpeakerMap        = map[SpeakerID]*Speaker{}
 	globalCompanyMap        = map[CompanyID]*Company{}
-	shouldMarshalAutoMeetup = false
+	ShouldMarshalAutoMeetup = false
 )
 
 type CompanyID string
@@ -227,7 +227,7 @@ type AutogenMeetupGroup struct {
 	SponsorTiers map[CompanyID]SponsorTier `json:"sponsorTiers"`
 	AutoMeetups  map[string]AutogenMeetup  `json:"-"`
 
-	members uint64
+	Members uint64 `json:"-"`
 }
 
 type MeetupGroup struct {
@@ -305,8 +305,8 @@ type AutogenMeetup struct {
 	Attendees uint64   `json:"attendees,omitempty"`
 	Address   string   `json:"address"`
 
-	// rsvps map the user ID to how many rsvp's they used at this event (themselves + guests)
-	rsvps map[uint64]uint64
+	// RSVPs map the user ID to how many rsvp's they used at this event (themselves + guests)
+	RSVPs map[uint64]uint64 `json:"-"`
 }
 
 type HumanMeetup struct {
@@ -326,7 +326,7 @@ type fullMeetup struct {
 }
 
 func (m Meetup) MarshalJSON() ([]byte, error) {
-	if shouldMarshalAutoMeetup {
+	if ShouldMarshalAutoMeetup {
 		return json.Marshal(fullMeetup{
 			AutogenMeetup: m.AutogenMeetup,
 			HumanMeetup:   m.HumanMeetup,
@@ -356,14 +356,14 @@ type Presentation struct {
 	Recording string       `json:"recording,omitempty"`
 	Speakers  []SpeakerRef `json:"speakers"`
 
-	start time.Time
-	end   time.Time
+	Start time.Time `json:"-"`
+	End   time.Time `json:"-"`
 }
 
 func (p *Presentation) StartTime() string {
-	return fmt.Sprintf("%d:%02d", p.start.UTC().Hour(), p.start.UTC().Minute())
+	return fmt.Sprintf("%d:%02d", p.Start.UTC().Hour(), p.Start.UTC().Minute())
 }
 
 func (p *Presentation) EndTime() string {
-	return fmt.Sprintf("%d:%02d", p.end.UTC().Hour(), p.end.UTC().Minute())
+	return fmt.Sprintf("%d:%02d", p.End.UTC().Hour(), p.End.UTC().Minute())
 }
