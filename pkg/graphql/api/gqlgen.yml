@@ -1,0 +1,36 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+- schema.graphql
+exec:
+  filename: ../generated/generated.go
+  package: generated
+model:
+  filename: ../models/models_gen.go
+  package: models
+resolver:
+  filename: ../handlers/resolver.go
+  type: Resolver
+  package: handlers
+models:
+  MeetupGroup:
+    model: github.com/cloud-native-nordics/stats-api/models.MeetupGroup
+  Organizer:
+    model: github.com/cloud-native-nordics/stats-api/models.Organizer
+  Company:
+    model: github.com/cloud-native-nordics/stats-api/models.Company
+  Meetup:
+    model: github.com/cloud-native-nordics/stats-api/models.Meetup
+  Sponsor:
+    model: github.com/cloud-native-nordics/stats-api/models.Sponsor
+  SponsorTier:
+    model: github.com/cloud-native-nordics/stats-api/models.SponsorTier
+  Member:
+    model: github.com/cloud-native-nordics/stats-api/models.Member
+  Presentation:
+    model: github.com/cloud-native-nordics/stats-api/models.Presentation
+  Speaker:
+    model: github.com/cloud-native-nordics/stats-api/models.Speaker

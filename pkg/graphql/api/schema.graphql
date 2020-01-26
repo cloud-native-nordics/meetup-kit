@@ -1,0 +1,98 @@
+schema {
+    query: Query
+}
+
+type MeetupGroup {
+    photo: String
+    name: String
+    city: String!
+    country: String!
+    description: String!
+    memberCount: Int!
+    sponsorTiers: [SponsorTier!]!
+    meetupID: String!
+    organizers: [Speaker!]!
+    cfpLink: String
+    latitude: Float
+    longitude: Float
+    ecosystemMembers: [Company!]!
+    meetups: [Meetup!]!
+}
+
+type Speaker {
+    id: String!
+    name: String
+    title: String
+    email: String
+    company: Company
+    github: String
+    speakersBureau: String
+    countries: [String]!
+    presentations: [Presentation!]!
+}
+
+
+type Company {
+    id: String!
+    name: String
+    websiteURL: String
+    logoURL: String
+    countries: [String]!
+    sponsorTiers: [SponsorTier!]!
+    speakers: [Speaker!]!
+    whiteLogo: Boolean
+}
+
+type Meetup {
+    id: Int!
+    name: String
+    date: String
+    duration: String
+    attendees: Int
+    address: String
+    photo: String
+    recording: String
+    sponsors: [Sponsor]!
+    presentations: [Presentation]
+    meetupGroup: MeetupGroup!
+}
+
+type Sponsor {
+    role: String!
+    company: Company!
+}
+
+type SponsorTier {
+    id: String!
+    tier: String!
+    company: Company!
+    meetupGroups: [MeetupGroup!]!
+}
+
+type Presentation {
+    id: String!
+    duration: String
+    title: String
+    slides: String
+    speakers: [Speaker]
+    meetup: Meetup!
+}
+
+type Query {
+    meetupGroups: [MeetupGroup!]!
+    meetupGroup(meetupID: String!): MeetupGroup!
+
+    companies: [Company!]!
+    company(id: String!): Company!
+
+    meetups: [Meetup!]!
+    meetup(id: Int!): Meetup!
+
+    presentations: [Presentation!]!
+    presentation(id: String!): Presentation!
+
+    speakers: [Speaker!]!
+    speaker(id: String!): Speaker!
+
+    slackInvite(email: String!): String!
+}
