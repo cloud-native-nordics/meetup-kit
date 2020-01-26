@@ -10,7 +10,7 @@ import (
 
 	"io/ioutil"
 
-	"github.com/cloud-native-nordics/stats-api/models"
+	"github.com/cloud-native-nordics/meetup-kit/pkg/graphql/models"
 	"github.com/golang/glog"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-memdb"

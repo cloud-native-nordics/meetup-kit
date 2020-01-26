@@ -11,10 +11,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 	schema := &memdb.DBSchema{
 		Tables: map[string]*memdb.TableSchema{
 			//MeetupGroup Schema
-			"meetupGroup": &memdb.TableSchema{
+			"meetupGroup": {
 				Name: "meetupGroup",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "MeetupID"},
@@ -22,10 +22,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//Meetup Schema
-			"meetup": &memdb.TableSchema{
+			"meetup": {
 				Name: "meetup",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.IntFieldIndex{Field: "ID"},
@@ -33,10 +33,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//Company Schema
-			"company": &memdb.TableSchema{
+			"company": {
 				Name: "company",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
@@ -44,10 +44,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//Sponsor Schema
-			"sponsor": &memdb.TableSchema{
+			"sponsor": {
 				Name: "sponsor",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
@@ -55,10 +55,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//SponsorTier Schema
-			"sponsorTier": &memdb.TableSchema{
+			"sponsorTier": {
 				Name: "sponsorTier",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
@@ -66,10 +66,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//Presentation Schema
-			"presentation": &memdb.TableSchema{
+			"presentation": {
 				Name: "presentation",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
@@ -77,10 +77,10 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//Speaker Schema
-			"speaker": &memdb.TableSchema{
+			"speaker": {
 				Name: "speaker",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
@@ -88,20 +88,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//SpeakerToCompany Schema
-			"speakerToCompany": &memdb.TableSchema{
+			"speakerToCompany": {
 				Name: "speakerToCompany",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"speakerID": &memdb.IndexSchema{
+					"speakerID": {
 						Name:    "speakerID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "SpeakerID"},
 					},
-					"companyID": &memdb.IndexSchema{
+					"companyID": {
 						Name:    "companyID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "CompanyID"},
@@ -109,20 +109,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//SponsorTierToMeetupGroup Schema
-			"sponsorTierToMeetupGroup": &memdb.TableSchema{
+			"sponsorTierToMeetupGroup": {
 				Name: "sponsorTierToMeetupGroup",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"meetupGroupID": &memdb.IndexSchema{
+					"meetupGroupID": {
 						Name:    "meetupGroupID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "MeetupGroupID"},
 					},
-					"sponsorTierID": &memdb.IndexSchema{
+					"sponsorTierID": {
 						Name:    "sponsorTierID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "SponsorTierID"},
@@ -130,20 +130,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//MeetupGroupToOrganizer Schema
-			"meetupGroupToOrganizer": &memdb.TableSchema{
+			"meetupGroupToOrganizer": {
 				Name: "meetupGroupToOrganizer",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"meetupGroupID": &memdb.IndexSchema{
+					"meetupGroupID": {
 						Name:    "meetupGroupID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "MeetupGroupID"},
 					},
-					"organizerID": &memdb.IndexSchema{
+					"organizerID": {
 						Name:    "organizerID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "OrganizerID"},
@@ -151,20 +151,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//MeetupGroupToMeetup Schema
-			"meetupGroupToMeetup": &memdb.TableSchema{
+			"meetupGroupToMeetup": {
 				Name: "meetupGroupToMeetup",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"meetupGroupID": &memdb.IndexSchema{
+					"meetupGroupID": {
 						Name:    "meetupGroupID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "MeetupGroupID"},
 					},
-					"meetupID": &memdb.IndexSchema{
+					"meetupID": {
 						Name:    "meetupID",
 						Unique:  false,
 						Indexer: &memdb.IntFieldIndex{Field: "MeetupID"},
@@ -172,20 +172,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//MeetupToSponsor Schema
-			"meetupToSponsor": &memdb.TableSchema{
+			"meetupToSponsor": {
 				Name: "meetupToSponsor",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"meetupID": &memdb.IndexSchema{
+					"meetupID": {
 						Name:    "meetupID",
 						Unique:  false,
 						Indexer: &memdb.IntFieldIndex{Field: "MeetupID"},
 					},
-					"sponsorID": &memdb.IndexSchema{
+					"sponsorID": {
 						Name:    "sponsorID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "SponsorID"},
@@ -193,20 +193,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//SponsorToCompany Schema
-			"sponsorToCompany": &memdb.TableSchema{
+			"sponsorToCompany": {
 				Name: "sponsorToCompany",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"companyID": &memdb.IndexSchema{
+					"companyID": {
 						Name:    "companyID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "CompanyID"},
 					},
-					"sponsorID": &memdb.IndexSchema{
+					"sponsorID": {
 						Name:    "sponsorID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "SponsorID"},
@@ -214,20 +214,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//MeetupToPresentation Schema
-			"meetupToPresentation": &memdb.TableSchema{
+			"meetupToPresentation": {
 				Name: "meetupToPresentation",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"meetupID": &memdb.IndexSchema{
+					"meetupID": {
 						Name:    "meetupID",
 						Unique:  false,
 						Indexer: &memdb.IntFieldIndex{Field: "MeetupID"},
 					},
-					"presentationID": &memdb.IndexSchema{
+					"presentationID": {
 						Name:    "presentationID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "PresentationID"},
@@ -235,20 +235,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//PresentationToSpeaker Schema
-			"presentationToSpeaker": &memdb.TableSchema{
+			"presentationToSpeaker": {
 				Name: "presentationToSpeaker",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"presentationID": &memdb.IndexSchema{
+					"presentationID": {
 						Name:    "presentationID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "PresentationID"},
 					},
-					"speakerID": &memdb.IndexSchema{
+					"speakerID": {
 						Name:    "speakerID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "SpeakerID"},
@@ -256,20 +256,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//MeetupGroupToEcosystemMember Schema
-			"meetupGroupToEcosystemMember": &memdb.TableSchema{
+			"meetupGroupToEcosystemMember": {
 				Name: "meetupGroupToEcosystemMember",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"meetupGroupID": &memdb.IndexSchema{
+					"meetupGroupID": {
 						Name:    "meetupGroupID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "MeetupGroupID"},
 					},
-					"companyID": &memdb.IndexSchema{
+					"companyID": {
 						Name:    "companyID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "CompanyID"},
@@ -277,20 +277,20 @@ func createDatabaseSchema() *memdb.DBSchema {
 				},
 			},
 			//SponsorTierToCompany Schema
-			"sponsorTierToCompany": &memdb.TableSchema{
+			"sponsorTierToCompany": {
 				Name: "sponsorTierToCompany",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"sponsorTierID": &memdb.IndexSchema{
+					"sponsorTierID": {
 						Name:    "sponsorTierID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "SponsorTierID"},
 					},
-					"companyID": &memdb.IndexSchema{
+					"companyID": {
 						Name:    "companyID",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "CompanyID"},

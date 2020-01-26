@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 
-	"github.com/cloud-native-nordics/stats-api/generated"
-	"github.com/cloud-native-nordics/stats-api/models"
-	"github.com/cloud-native-nordics/stats-api/repositories"
+	"github.com/cloud-native-nordics/meetup-kit/pkg/graphql/generated"
+	"github.com/cloud-native-nordics/meetup-kit/pkg/graphql/models"
+	"github.com/cloud-native-nordics/meetup-kit/pkg/graphql/repositories"
 	"github.com/golang/glog"
 )
 

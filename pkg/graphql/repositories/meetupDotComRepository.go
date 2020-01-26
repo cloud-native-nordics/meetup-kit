@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cloud-native-nordics/stats-api/models"
+	"github.com/cloud-native-nordics/meetup-kit/pkg/graphql/models"
 )
 
 // GetMeetupInfoFromAPI fetches all information it can about the given meetup group
