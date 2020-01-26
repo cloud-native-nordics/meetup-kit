@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"bytes"
@@ -10,8 +10,8 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/cloud-native-nordics/meetup-kit/pkg/types"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/yaml"
 )
 
@@ -30,16 +30,6 @@ type Options struct {
 	Validate bool
 }
 
-func Generate(opts *Options) error {
-	fmt.Println("Generating... no-op at the moment!")
-	return nil
-}
-
-var speakersFile = pflag.String("speakers-file", "speakers.yaml", "Point to the speakers.yaml file")
-var companiesFile = pflag.String("companies-file", "companies.yaml", "Point to the companies.yaml file")
-var rootDir = pflag.String("meetups-dir", ".", "Point to the directory that has all meetup groups as subfolders, each with a meetup.yaml file")
-var dryRun = pflag.Bool("dry-run", true, "Whether to actually apply the changes or not")
-var validateFlag = pflag.Bool("validate", false, "Whether to validate the current state of the repo content with the spec")
 var unmarshal = yaml.UnmarshalStrict
 
 // this maps the locations returned from meetup.com to what we want to use here.
@@ -48,16 +38,9 @@ var cityNameExceptions = map[string]string{
 	"Århus": "Aarhus",
 }
 
-func main() {
-	if err := run(); err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-}
-
-func run() error {
-	pflag.Parse()
-	cfg, err := load(*companiesFile, *speakersFile, *rootDir)
+func Generate(opts *Options) error {
+	log.Debugf("generate: %v", *opts)
+	cfg, err := load(opts.CompaniesFile, opts.SpeakersFile, opts.RootDir)
 	if err != nil {
 		return err
 	}
@@ -68,22 +51,24 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if *validateFlag {
-		return validate(out, *rootDir)
+	if opts.Validate {
+		return validate(out, opts.RootDir)
 	}
-	return apply(out, *rootDir)
+	return apply(out, opts.RootDir, opts.DryRun)
 }
 
-func load(companiesPath, speakersPath, meetupsDir string) (*Config, error) {
-	companies := []Company{}
+func load(companiesPath, speakersPath, meetupsDir string) (*types.Config, error) {
+	log.Debugf("load: %s %s %s", companiesPath, speakersPath, meetupsDir)
+	companies := []types.Company{}
 	companiesContent, err := ioutil.ReadFile(companiesPath)
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("%s", string(companiesContent))
 	if err := unmarshal(companiesContent, &companies); err != nil {
 		return nil, err
 	}
-	speakers := []Speaker{}
+	speakers := []types.Speaker{}
 	speakersContent, err := ioutil.ReadFile(speakersPath)
 	if err != nil {
 		return nil, err
@@ -91,7 +76,7 @@ func load(companiesPath, speakersPath, meetupsDir string) (*Config, error) {
 	if err := unmarshal(speakersContent, &speakers); err != nil {
 		return nil, err
 	}
-	meetupGroups := []MeetupGroup{}
+	meetupGroups := []types.MeetupGroup{}
 
 	err = filepath.Walk(meetupsDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -110,7 +95,7 @@ func load(companiesPath, speakersPath, meetupsDir string) (*Config, error) {
 		} else if err != nil {
 			return err
 		}
-		mg := MeetupGroup{}
+		mg := types.MeetupGroup{}
 		mgContent, err := ioutil.ReadFile(meetupsFile)
 		if err != nil {
 			return err
@@ -128,7 +113,7 @@ func load(companiesPath, speakersPath, meetupsDir string) (*Config, error) {
 	wg.Add(len(meetupGroups))
 	// Run the fetching from the meetup API in parallel for all meetup groups to speed things up
 	for i := range meetupGroups {
-		go func(mg *MeetupGroup) {
+		go func(mg *types.MeetupGroup) {
 			defer wg.Done()
 			mg.AutogenMeetupGroup, err = GetMeetupInfoFromAPI(*mg)
 			if err != nil {
@@ -139,17 +124,18 @@ func load(companiesPath, speakersPath, meetupsDir string) (*Config, error) {
 	}
 	wg.Wait()
 
-	return &Config{
+	return &types.Config{
 		Speakers:     speakers,
 		Companies:    companies,
 		MeetupGroups: meetupGroups,
 	}, nil
 }
 
-func apply(files map[string][]byte, rootDir string) error {
+func apply(files map[string][]byte, rootDir string, dryRun bool) error {
+	log.Debugf("apply: %v %s %t", files, rootDir, dryRun)
 	for path, fileContent := range files {
 		fullPath := filepath.Join(rootDir, path)
-		if err := writeFile(fullPath, fileContent); err != nil {
+		if err := writeFile(fullPath, fileContent, dryRun); err != nil {
 			return err
 		}
 	}
@@ -157,6 +143,7 @@ func apply(files map[string][]byte, rootDir string) error {
 }
 
 func validate(files map[string][]byte, rootDir string) error {
+	log.Debugf("validate: %v %s %t", files, rootDir)
 	for path, fileContent := range files {
 		fullPath := filepath.Join(rootDir, path)
 		actual, err := ioutil.ReadFile(fullPath)
@@ -172,6 +159,7 @@ func validate(files map[string][]byte, rootDir string) error {
 }
 
 func tmpl(t *template.Template, obj interface{}) ([]byte, error) {
+	log.Debugf("tmpl: %v", obj)
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, obj); err != nil {
 		return nil, err
@@ -179,9 +167,10 @@ func tmpl(t *template.Template, obj interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func exec(cfg *Config) (map[string][]byte, error) {
+func exec(cfg *types.Config) (map[string][]byte, error) {
+	log.Debugf("exec: %v", *cfg)
 	result := map[string][]byte{}
-	shouldMarshalAutoMeetup = false
+	types.ShouldMarshalAutoMeetup = false
 	for _, mg := range cfg.MeetupGroups {
 		mg.SetMeetupList()
 		b, err := tmpl(readmeTmpl, mg)
@@ -215,12 +204,12 @@ func exec(cfg *Config) (map[string][]byte, error) {
 		return nil, err
 	}
 	result["README.md"] = readmeBytes
-	shouldMarshalAutoMeetup = true
+	types.ShouldMarshalAutoMeetup = true
 	configJSON, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return nil, err
 	}
-	result["config.json"] = configJSON
+	result["types.Config.json"] = configJSON
 	stats, err := aggregateStats(cfg)
 	if err != nil {
 		return nil, err
@@ -233,7 +222,7 @@ func exec(cfg *Config) (map[string][]byte, error) {
 	return result, nil
 }
 
-func update(cfg *Config) error {
+func update(cfg *types.Config) error {
 	for i := range cfg.MeetupGroups {
 		mg := &cfg.MeetupGroups[i]
 
@@ -249,42 +238,42 @@ func update(cfg *Config) error {
 	return nil
 }
 
-func calcSponsorTiers(mg *MeetupGroup) {
-	mg.SponsorTiers = map[CompanyID]SponsorTier{}
+func calcSponsorTiers(mg *types.MeetupGroup) {
+	mg.SponsorTiers = map[types.CompanyID]types.SponsorTier{}
 	for _, c := range mg.EcosystemMembers {
 		if c.Company != nil {
-			mg.SponsorTiers[c.ID] = SponsorTierEcosystemMember
+			mg.SponsorTiers[c.ID] = types.SponsorTierEcosystemMember
 		}
 	}
 	for _, m := range mg.Meetups {
 		for _, p := range m.Presentations {
 			for _, s := range p.Speakers {
 				if s.Company.Company != nil {
-					mg.SponsorTiers[s.Company.ID] = SponsorTierSpeakerProvider
+					mg.SponsorTiers[s.Company.ID] = types.SponsorTierSpeakerProvider
 				}
 			}
 		}
 	}
 	for _, o := range mg.Organizers {
 		if o.Company.Company != nil {
-			mg.SponsorTiers[o.Company.ID] = SponsorTierMeetup
+			mg.SponsorTiers[o.Company.ID] = types.SponsorTierMeetup
 		}
 	}
 	for _, m := range mg.Meetups {
 		for _, s := range m.Sponsors {
 			if s.Company.Company != nil {
-				if s.Role == SponsorRoleLongterm {
-					mg.SponsorTiers[s.Company.ID] = SponsorTierLongterm
+				if s.Role == types.SponsorRoleLongterm {
+					mg.SponsorTiers[s.Company.ID] = types.SponsorTierLongterm
 				} else {
-					mg.SponsorTiers[s.Company.ID] = SponsorTierMeetup
+					mg.SponsorTiers[s.Company.ID] = types.SponsorTierMeetup
 				}
 			}
 		}
 	}
 }
 
-func writeFile(path string, b []byte) error {
-	if *dryRun {
+func writeFile(path string, b []byte, dryRun bool) error {
+	if dryRun {
 		fmt.Printf("Would write file %q with contents \"%s\"\n", path, string(b))
 		return nil
 	}
