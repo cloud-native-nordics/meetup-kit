@@ -45,7 +45,7 @@ get_version_vars() {
 ldflag() {
   local key=${1}
   local val=${2}
-  echo "-X 'github.com/luxas/meetup-kit/pkg/version.${key}=${val}'"
+  echo "-X 'github.com/cloud-native-nordics/meetup-kit/pkg/version.${key}=${val}'"
 }
 
 # Prints the value that needs to be passed to the -ldflags parameter of go build
