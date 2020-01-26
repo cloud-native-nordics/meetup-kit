@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.10.2
 	github.com/go-chi/chi v4.0.3+incompatible
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-memdb v1.0.4
 	github.com/otiai10/copy v1.0.2
 	github.com/rs/cors v1.7.0
